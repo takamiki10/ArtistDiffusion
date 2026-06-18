@@ -1,0 +1,60 @@
+cat > .gitignore <<'EOF'
+# Large local files
+/transfer
+/Miniconda3-latest-Linux-x86_64.sh
+/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg.zip
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments / installers
+.venv/
+venv/
+env/
+conda/
+miniconda3/
+anaconda3/
+
+# ML outputs / datasets / checkpoints
+data/
+outputs/
+checkpoints/
+runs/
+logs/
+wandb/
+tensorboard/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.npz
+*.npy
+*.csv
+*.png
+*.mp4
+*.gif
+
+# External / embedded repositories
+diffusion_policy/
+artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+EOF
