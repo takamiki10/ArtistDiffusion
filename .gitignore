@@ -53,17 +53,10 @@ artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/*
 !artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/
 artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/*
 !artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/**
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/
-artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/*
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/CMakeLists.txt
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/package.xml
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/urdf/
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/urdf/materials.xacro
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/urdf/xMateCR7.xacro
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/meshes/
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/meshes/xMateCR7/
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_description/meshes/xMateCR7/**
+artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/*
+!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/
+artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/*
+!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/gazebo_xMateCR7.urdf
 
 # OS / editor
 .DS_Store
