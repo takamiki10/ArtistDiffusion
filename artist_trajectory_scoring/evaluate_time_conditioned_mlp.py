@@ -62,7 +62,11 @@ class TimeConditionedMLP(nn.Module):
 
 
 def load_model(model_path: Path, device: torch.device):
-    checkpoint = torch.load(model_path, map_location=device)
+    # PyTorch 2.6 changed torch.load's default to weights_only=True.
+    # Our locally trained checkpoints intentionally store numpy normalization
+    # arrays and metadata in addition to tensors, so load the trusted local
+    # checkpoint with weights_only=False.
+    checkpoint = torch.load(model_path, map_location=device, weights_only=False)
 
     model = TimeConditionedMLP(
         input_dim=int(checkpoint.get("input_dim", 4)),
@@ -202,12 +206,17 @@ def main() -> None:
 
     model, ckpt = load_model(args.model, device)
 
-    path_dirs = sorted([p for p in args.dataset_dir.glob("path_*") if p.is_dir()])
+    path_dirs = sorted(
+        p for p in args.dataset_dir.iterdir()
+        if p.is_dir() and (p / "desired_path.csv").exists()
+    )
     if args.num_paths is not None:
         path_dirs = path_dirs[: args.num_paths]
 
     if not path_dirs:
-        raise FileNotFoundError(f"No path_* folders found in {args.dataset_dir}")
+        raise FileNotFoundError(
+            f"No path folders with desired_path.csv found in {args.dataset_dir}"
+        )
 
     rows: List[dict] = []
 

@@ -65,6 +65,7 @@ class ScoreBreakdown:
     mean_error: float
     max_error: float
     max_error_time: float
+    max_cost: float
     vel_cost: float
     accel_cost: float
     limit_cost: float
@@ -130,6 +131,7 @@ def save_metrics_json(path: str, score: ScoreBreakdown, args: argparse.Namespace
         "mean_error": score.mean_error,
         "max_error": score.max_error,
         "max_error_time": score.max_error_time,
+        "max_cost": score.max_cost,
         "vel_cost": score.vel_cost,
         "accel_cost": score.accel_cost,
         "limit_cost": score.limit_cost,
@@ -156,6 +158,7 @@ def save_metrics_json(path: str, score: ScoreBreakdown, args: argparse.Namespace
             "w_tangent": args.w_tangent,
             "w_segment": args.w_segment,
         },
+        "cost_breakdown": cost_breakdown_dict(score, args),
         "optimizer": {
             "iterations": args.iterations,
             "num_candidates": args.num_candidates,
@@ -168,6 +171,77 @@ def save_metrics_json(path: str, score: ScoreBreakdown, args: argparse.Namespace
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2, sort_keys=True)
+
+
+def raw_cost_components(score: ScoreBreakdown) -> Dict[str, float]:
+    return {
+        "path": score.path_error,
+        "z": score.z_error,
+        "topk": score.topk_error,
+        "max": score.max_cost,
+        "shape": score.shape_cost,
+        "cusp": score.cusp_cost,
+        "progress": score.progress_cost,
+        "tangent": score.tangent_cost,
+        "segment": score.segment_cost,
+        "vel": score.vel_cost,
+        "accel": score.accel_cost,
+        "wp_accel": score.waypoint_accel_cost,
+        "limit": score.limit_cost,
+    }
+
+
+def cost_weights(args: argparse.Namespace) -> Dict[str, float]:
+    return {
+        "path": args.w_path,
+        "z": args.w_z,
+        "topk": args.w_topk,
+        "max": args.w_max,
+        "shape": args.w_shape,
+        "cusp": args.w_cusp,
+        "progress": args.w_progress,
+        "tangent": args.w_tangent,
+        "segment": args.w_segment,
+        "vel": args.w_vel,
+        "accel": args.w_accel,
+        "wp_accel": args.w_wp_accel,
+        "limit": args.w_limit,
+    }
+
+
+def cost_breakdown_dict(score: ScoreBreakdown, args: argparse.Namespace) -> Dict[str, Any]:
+    raw = raw_cost_components(score)
+    weights = cost_weights(args)
+    weighted = {name: raw[name] * weights[name] for name in raw}
+    return {
+        "total": score.total,
+        "raw": raw,
+        "weights": weights,
+        "weighted": weighted,
+        "weighted_sum": float(sum(weighted.values())),
+    }
+
+
+def format_weighted_cost_breakdown(score: ScoreBreakdown, args: argparse.Namespace) -> str:
+    weighted = cost_breakdown_dict(score, args)["weighted"]
+    fields = [
+        "path",
+        "z",
+        "topk",
+        "max",
+        "shape",
+        "cusp",
+        "progress",
+        "tangent",
+        "segment",
+        "vel",
+        "accel",
+        "wp_accel",
+        "limit",
+    ]
+    parts = [f"total={score.total:.3e}"]
+    parts.extend(f"{name}={weighted[name]:.3e}" for name in fields)
+    return " | ".join(parts)
 
 
 def interpolate_waypoints(
@@ -360,6 +434,7 @@ def score_trajectory_arrays(
     path_error = float(np.mean(err_sq))
     mean_error = float(np.mean(err))
     max_idx = int(np.argmax(err))
+    max_cost = float(np.max(err_sq))
     max_error = float(err[max_idx])
     max_error_time = float(t[max_idx])
 
@@ -369,10 +444,8 @@ def score_trajectory_arrays(
         # relative to the full Cartesian path term.
         z_error *= 0.25
 
-    topk_error = 0.0
-    if w_topk > 0.0:
-        k = max(1, int(math.ceil(len(err_sq) * topk_frac)))
-        topk_error = float(np.mean(np.partition(err_sq, -k)[-k:]))
+    k = max(1, int(math.ceil(len(err_sq) * topk_frac)))
+    topk_error = float(np.mean(np.partition(err_sq, -k)[-k:]))
 
     shape_cost = 0.0
     cusp_cost = 0.0
@@ -380,44 +453,46 @@ def score_trajectory_arrays(
     tangent_cost = 0.0
     segment_cost = 0.0
 
-    nearest_seg_idx: Optional[np.ndarray] = None
-    if w_progress > 0.0 or w_tangent > 0.0 or w_segment > 0.0:
-        segment_dist_sq, desired_progress, nearest_seg_idx = nearest_desired_segment_progress(ee, desired)
-        segment_cost = float(np.mean(segment_dist_sq))
-
-        if len(desired_progress) >= 2:
-            backward = np.maximum(desired_progress[:-1] - desired_progress[1:], 0.0)
-            progress_cost = float(np.mean(backward * backward))
-
-        if len(ee) >= 2:
-            desired_tangent = desired_path_tangents(desired)
-            fk_tangent, fk_step_len = fk_path_tangents(ee)
-            if len(desired_tangent) and nearest_seg_idx is not None:
-                # Align each FK motion step with the tangent of the desired
-                # segment nearest to the FK point at the start of that step.
-                seg_for_step = np.clip(nearest_seg_idx[:-1], 0, len(desired_tangent) - 1)
-                active = fk_step_len > 1e-12
-                if np.any(active):
-                    dots = np.sum(fk_tangent[active] * desired_tangent[seg_for_step[active]], axis=1)
-                    dots = np.clip(dots, -1.0, 1.0)
-                    poor_alignment = np.maximum(1.0 - dots, 0.0)
-                    tangent_cost = float(np.mean(poor_alignment * poor_alignment))
-
     if len(ee) >= 2:
         ee_step = np.diff(ee, axis=0)
         desired_step = np.diff(desired, axis=0)
         shape_cost = float(np.mean(np.sum((ee_step - desired_step) ** 2, axis=1)))
 
-        if w_cusp > 0.0:
-            desired_norm = np.linalg.norm(desired_step, axis=1)
-            active = desired_norm > 1e-9
-            if np.any(active):
-                tangent = desired_step[active] / desired_norm[active, None]
-                progress = np.sum(ee_step[active] * tangent, axis=1)
-                desired_progress = desired_norm[active]
-                backward = np.maximum(-progress, 0.0)
-                overspeed = np.maximum(np.abs(progress) - 2.5 * desired_progress, 0.0)
-                cusp_cost = float(np.mean(backward * backward + overspeed * overspeed))
+        desired_norm = np.linalg.norm(desired_step, axis=1)
+        desired_active = desired_norm > 1e-9
+        if np.any(desired_active):
+            desired_dir = np.zeros_like(desired_step)
+            desired_dir[desired_active] = (
+                desired_step[desired_active] / desired_norm[desired_active, None]
+            )
+
+            # Time-aligned progress/order term:
+            # penalize FK steps whose projection onto the desired local
+            # direction is negative at the same timestep.
+            progress_dot = np.sum(ee_step[desired_active] * desired_dir[desired_active], axis=1)
+            backward = np.maximum(-progress_dot, 0.0)
+            progress_cost = float(np.mean(backward * backward))
+
+            # Time-aligned tangent term:
+            # compare normalized FK step direction to desired local direction,
+            # skipping near-zero FK steps to avoid noisy division.
+            fk_step_norm = np.linalg.norm(ee_step, axis=1)
+            tangent_active = desired_active & (fk_step_norm > 1e-9)
+            if np.any(tangent_active):
+                fk_dir = ee_step[tangent_active] / fk_step_norm[tangent_active, None]
+                dots = np.sum(fk_dir * desired_dir[tangent_active], axis=1)
+                dots = np.clip(dots, -1.0, 1.0)
+                tangent_cost = float(np.mean((1.0 - dots) ** 2))
+
+            progress = np.sum(ee_step[desired_active] * desired_dir[desired_active], axis=1)
+            desired_progress = desired_norm[desired_active]
+            backward = np.maximum(-progress, 0.0)
+            overspeed = np.maximum(np.abs(progress) - 2.5 * desired_progress, 0.0)
+            cusp_cost = float(np.mean(backward * backward + overspeed * overspeed))
+
+    if w_segment > 0.0:
+        segment_dist_sq, _, _ = nearest_desired_segment_progress(ee, desired)
+        segment_cost = float(np.mean(segment_dist_sq))
 
     vel = np.diff(q, axis=0)
     accel = q[2:] - 2.0 * q[1:-1] + q[:-2]
@@ -435,7 +510,7 @@ def score_trajectory_arrays(
         + w_limit * limit_cost
         + w_z * z_error
         + w_topk * topk_error
-        + w_max * float(np.max(err_sq))
+        + w_max * max_cost
         + w_shape * shape_cost
         + w_cusp * cusp_cost
         + w_wp_accel * waypoint_accel_cost
@@ -449,6 +524,7 @@ def score_trajectory_arrays(
         mean_error=mean_error,
         max_error=max_error,
         max_error_time=max_error_time,
+        max_cost=max_cost,
         vel_cost=vel_cost,
         accel_cost=accel_cost,
         limit_cost=limit_cost,
@@ -599,6 +675,7 @@ def run_cem_restart(
                 f"accel={best_score.accel_cost:.3e} | "
                 f"std_mean={float(std_wp.mean()):.4f}"
             )
+            print("  best weighted costs | " + format_weighted_cost_breakdown(best_score, args))
 
     assert best_q is not None and best_ee is not None and best_score is not None
     return best_q, best_ee, best_score
@@ -650,6 +727,7 @@ def cem_optimize(args: argparse.Namespace) -> Tuple[np.ndarray, np.ndarray, Scor
             f"max={restart_score.max_error:.6f} m | "
             f"path_error={restart_score.path_error:.8e}"
         )
+        print("  restart weighted costs | " + format_weighted_cost_breakdown(restart_score, args))
 
     assert best_q is not None and best_ee is not None and best_score is not None
     return best_q, best_ee, best_score
@@ -697,8 +775,8 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--w_shape", type=float, default=0.0, help="penalty matching local Cartesian step vectors")
     p.add_argument("--w_cusp", type=float, default=0.0, help="penalty for backward/excessive progress along desired tangent")
     p.add_argument("--w_wp_accel", type=float, default=0.0, help="waypoint-level acceleration penalty")
-    p.add_argument("--w_progress", type=float, default=0.0, help="penalty for decreasing nearest-segment progress along desired path")
-    p.add_argument("--w_tangent", type=float, default=0.0, help="penalty for poor FK tangent alignment with nearest desired-path tangent")
+    p.add_argument("--w_progress", type=float, default=0.0, help="time-aligned penalty for FK steps moving backward along desired path direction")
+    p.add_argument("--w_tangent", type=float, default=0.0, help="time-aligned penalty for poor FK step tangent alignment with desired path direction")
     p.add_argument("--w_segment", type=float, default=0.0, help="penalty for squared distance to nearest desired-path segment")
 
     # Conservative generic limits. Replace with exact xMateCR7 limits later if needed.
@@ -738,6 +816,7 @@ def main() -> None:
     print(f"  mean_error:          {best_score.mean_error:.6f} m")
     print(f"  max_error:           {best_score.max_error:.6f} m")
     print(f"  max_error_time:      {best_score.max_error_time:.6f}")
+    print(f"  max_cost:            {best_score.max_cost:.10e}")
     print(f"  RMS error:           {math.sqrt(best_score.path_error):.6f} m")
     print(f"  z_error:             {best_score.z_error:.10e}")
     print(f"  topk_error:          {best_score.topk_error:.10e}")
@@ -750,6 +829,11 @@ def main() -> None:
     print(f"  accel_cost:          {best_score.accel_cost:.10e}")
     print(f"  waypoint_accel_cost: {best_score.waypoint_accel_cost:.10e}")
     print(f"  limit_cost:          {best_score.limit_cost:.10e}")
+    print("\nFinal weighted cost breakdown:")
+    print("  " + format_weighted_cost_breakdown(best_score, args))
+    print("Final raw cost components:")
+    for name, value in raw_cost_components(best_score).items():
+        print(f"  {name:10s}: {value:.10e}")
 
 
 if __name__ == "__main__":
