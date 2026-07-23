@@ -1,0 +1,127 @@
+LocalResidualConditionalUNet1D(
+  (time_embedding): Sequential(
+    (0): SinusoidalTimeEmbedding()
+    (1): Linear(in_features=64, out_features=256, bias=True)
+    (2): SiLU()
+    (3): Linear(in_features=256, out_features=256, bias=True)
+  )
+  (init_conv): Conv1d(44, 64, kernel_size=(3,), stride=(1,), padding=(1,))
+  (down1): ResidualBlock1D(
+    (norm1): GroupNorm(8, 64, eps=1e-05, affine=True)
+    (conv1): Conv1d(64, 64, kernel_size=(3,), stride=(1,), padding=(1,))
+    (norm2): GroupNorm(8, 64, eps=1e-05, affine=True)
+    (conv2): Conv1d(64, 64, kernel_size=(3,), stride=(1,), padding=(1,))
+    (time_mlp): Sequential(
+      (0): SiLU()
+      (1): Linear(in_features=256, out_features=64, bias=True)
+    )
+    (skip): Identity()
+  )
+  (downsample1): Downsample1D(
+    (conv): Conv1d(64, 64, kernel_size=(4,), stride=(2,), padding=(1,))
+  )
+  (down2): ResidualBlock1D(
+    (norm1): GroupNorm(8, 64, eps=1e-05, affine=True)
+    (conv1): Conv1d(64, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+    (norm2): GroupNorm(8, 128, eps=1e-05, affine=True)
+    (conv2): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+    (time_mlp): Sequential(
+      (0): SiLU()
+      (1): Linear(in_features=256, out_features=128, bias=True)
+    )
+    (skip): Conv1d(64, 128, kernel_size=(1,), stride=(1,))
+  )
+  (downsample2): Downsample1D(
+    (conv): Conv1d(128, 128, kernel_size=(4,), stride=(2,), padding=(1,))
+  )
+  (down3): ResidualBlock1D(
+    (norm1): GroupNorm(8, 128, eps=1e-05, affine=True)
+    (conv1): Conv1d(128, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+    (norm2): GroupNorm(8, 256, eps=1e-05, affine=True)
+    (conv2): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+    (time_mlp): Sequential(
+      (0): SiLU()
+      (1): Linear(in_features=256, out_features=256, bias=True)
+    )
+    (skip): Conv1d(128, 256, kernel_size=(1,), stride=(1,))
+  )
+  (downsample3): Downsample1D(
+    (conv): Conv1d(256, 256, kernel_size=(4,), stride=(2,), padding=(1,))
+  )
+  (mid1): ResidualBlock1D(
+    (norm1): GroupNorm(8, 256, eps=1e-05, affine=True)
+    (conv1): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+    (norm2): GroupNorm(8, 256, eps=1e-05, affine=True)
+    (conv2): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+    (time_mlp): Sequential(
+      (0): SiLU()
+      (1): Linear(in_features=256, out_features=256, bias=True)
+    )
+    (skip): Identity()
+  )
+  (mid2): ResidualBlock1D(
+    (norm1): GroupNorm(8, 256, eps=1e-05, affine=True)
+    (conv1): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+    (norm2): GroupNorm(8, 256, eps=1e-05, affine=True)
+    (conv2): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+    (time_mlp): Sequential(
+      (0): SiLU()
+      (1): Linear(in_features=256, out_features=256, bias=True)
+    )
+    (skip): Identity()
+  )
+  (upsample3): Upsample1D(
+    (conv): ConvTranspose1d(256, 256, kernel_size=(4,), stride=(2,), padding=(1,))
+  )
+  (up3): ResidualBlock1D(
+    (norm1): GroupNorm(8, 512, eps=1e-05, affine=True)
+    (conv1): Conv1d(512, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+    (norm2): GroupNorm(8, 128, eps=1e-05, affine=True)
+    (conv2): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+    (time_mlp): Sequential(
+      (0): SiLU()
+      (1): Linear(in_features=256, out_features=128, bias=True)
+    )
+    (skip): Conv1d(512, 128, kernel_size=(1,), stride=(1,))
+  )
+  (upsample2): Upsample1D(
+    (conv): ConvTranspose1d(128, 128, kernel_size=(4,), stride=(2,), padding=(1,))
+  )
+  (up2): ResidualBlock1D(
+    (norm1): GroupNorm(8, 256, eps=1e-05, affine=True)
+    (conv1): Conv1d(256, 64, kernel_size=(3,), stride=(1,), padding=(1,))
+    (norm2): GroupNorm(8, 64, eps=1e-05, affine=True)
+    (conv2): Conv1d(64, 64, kernel_size=(3,), stride=(1,), padding=(1,))
+    (time_mlp): Sequential(
+      (0): SiLU()
+      (1): Linear(in_features=256, out_features=64, bias=True)
+    )
+    (skip): Conv1d(256, 64, kernel_size=(1,), stride=(1,))
+  )
+  (upsample1): Upsample1D(
+    (conv): ConvTranspose1d(64, 64, kernel_size=(4,), stride=(2,), padding=(1,))
+  )
+  (up1): ResidualBlock1D(
+    (norm1): GroupNorm(8, 128, eps=1e-05, affine=True)
+    (conv1): Conv1d(128, 64, kernel_size=(3,), stride=(1,), padding=(1,))
+    (norm2): GroupNorm(8, 64, eps=1e-05, affine=True)
+    (conv2): Conv1d(64, 64, kernel_size=(3,), stride=(1,), padding=(1,))
+    (time_mlp): Sequential(
+      (0): SiLU()
+      (1): Linear(in_features=256, out_features=64, bias=True)
+    )
+    (skip): Conv1d(128, 64, kernel_size=(1,), stride=(1,))
+  )
+  (final): Sequential(
+    (0): GroupNorm(8, 64, eps=1e-05, affine=True)
+    (1): SiLU()
+    (2): Conv1d(64, 6, kernel_size=(3,), stride=(1,), padding=(1,))
+  )
+)
+
+model_class: train_conditional_diffusion_trajectory_v5_residual_unet.LocalResidualConditionalUNet1D
+constructor_kwargs: {'target_dim': 6, 'condition_dim': 38, 'base_channels': 64, 'horizon': 32}
+parameter_count: 2757382
+condition_dim: 38
+target_dim: 6
+prediction_target: epsilon

@@ -34,6 +34,8 @@ DEFAULT_URDF_PATH = (
 )
 DEFAULT_JOINT_NAMES = ["joint1", "joint2", "joint3", "joint4", "joint5", "joint6"]
 DEFAULT_EE_LINK = "xMateCR7_link6"
+HARD_JOINT_LIMIT_TOLERANCE_RAD = 1.0e-7
+DEFAULT_JOINT_LIMIT_SAFETY_MARGIN_RAD = 0.01
 
 
 def read_desired_path(path_csv: Path) -> Tuple[np.ndarray, np.ndarray]:
@@ -174,6 +176,117 @@ def get_joint_bounds(
             raise ValueError(f"Invalid bounds for {joint_name}: lower={lower}, upper={upper}")
         bounds.append((lower, upper))
     return bounds
+
+
+def check_joint_limits(
+    q: np.ndarray,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    joint_names: Sequence[str] = DEFAULT_JOINT_NAMES,
+    *,
+    tolerance: float = HARD_JOINT_LIMIT_TOLERANCE_RAD,
+    safety_margin: float = DEFAULT_JOINT_LIMIT_SAFETY_MARGIN_RAD,
+) -> Dict[str, Any]:
+    """Evaluate hard limits and reporting-only safety margins consistently.
+
+    The hard-limit tolerance is intentionally large enough to absorb float32
+    serialization of decimal URDF limits (for example -6.1082 for joint6).
+    Safety-margin proximity is never promoted to a hard violation.
+    """
+    values = np.asarray(q)
+    lower_values = np.asarray(lower, dtype=np.float64).reshape(-1)
+    upper_values = np.asarray(upper, dtype=np.float64).reshape(-1)
+    names = tuple(str(name) for name in joint_names)
+    if values.ndim != 2 or values.shape[1] != len(names):
+        raise ValueError(
+            f"q must have shape (T,{len(names)}), got {values.shape}"
+        )
+    if lower_values.shape != (len(names),) or upper_values.shape != (len(names),):
+        raise ValueError("Joint-limit arrays do not match the active-joint order")
+    if len(set(names)) != len(names):
+        raise ValueError("Active joint names must be unique")
+    if tolerance < 0.0 or safety_margin < 0.0:
+        raise ValueError("Joint-limit tolerance and safety margin must be non-negative")
+    if np.any(lower_values >= upper_values):
+        raise ValueError("Hard lower limits must be less than hard upper limits")
+    if np.any(lower_values + safety_margin > upper_values - safety_margin):
+        raise ValueError("Safety margin leaves an empty joint interval")
+
+    values64 = values.astype(np.float64, copy=False)
+    finite = np.isfinite(values64)
+    below_amount = np.maximum(lower_values[None, :] - values64, 0.0)
+    above_amount = np.maximum(values64 - upper_values[None, :], 0.0)
+    hard_mask = finite & (
+        (values64 < lower_values[None, :] - tolerance)
+        | (values64 > upper_values[None, :] + tolerance)
+    )
+    safety_mask = np.zeros_like(hard_mask)
+    if safety_margin > 0.0:
+        safety_mask = finite & ~hard_mask & (
+            (values64 < lower_values[None, :] + safety_margin)
+            | (values64 > upper_values[None, :] - safety_margin)
+        )
+    signed_margin = np.minimum(
+        values64 - lower_values[None, :],
+        upper_values[None, :] - values64,
+    )
+    finite_margins = signed_margin[finite]
+
+    def details(mask: np.ndarray, category: str) -> List[Dict[str, Any]]:
+        records: List[Dict[str, Any]] = []
+        for timestep, joint_index in np.argwhere(mask):
+            t = int(timestep)
+            j = int(joint_index)
+            value = float(values64[t, j])
+            lower_limit = float(lower_values[j])
+            upper_limit = float(upper_values[j])
+            side = "lower" if value < lower_limit + safety_margin else "upper"
+            hard_magnitude = float(below_amount[t, j] + above_amount[t, j])
+            safety_magnitude = float(
+                max(lower_limit + safety_margin - value, 0.0)
+                + max(value - (upper_limit - safety_margin), 0.0)
+            )
+            records.append({
+                "category": category,
+                "timestep": t,
+                "joint_index": j,
+                "joint_name": names[j],
+                "joint_value": value,
+                "lower_limit": lower_limit,
+                "upper_limit": upper_limit,
+                "safe_lower_limit": lower_limit + safety_margin,
+                "safe_upper_limit": upper_limit - safety_margin,
+                "value_minus_lower_limit": value - lower_limit,
+                "upper_limit_minus_value": upper_limit - value,
+                "violation_side": side,
+                "hard_violation_magnitude": hard_magnitude,
+                "safety_margin_violation_magnitude": safety_magnitude,
+                "violation_magnitude": (
+                    hard_magnitude if category == "hard" else safety_magnitude
+                ),
+                "hard_limit_violation": category == "hard",
+            })
+        return records
+
+    hard_details = details(hard_mask, "hard")
+    safety_details = details(safety_mask, "safety_margin")
+    return {
+        "joint_names": list(names),
+        "hard_lower_limits": lower_values.tolist(),
+        "hard_upper_limits": upper_values.tolist(),
+        "tolerance": float(tolerance),
+        "safety_margin": float(safety_margin),
+        "hard_joint_limit_violation_count": int(np.count_nonzero(hard_mask)),
+        "hard_joint_limit_violation_magnitude": float(
+            np.sum((below_amount + above_amount)[hard_mask])
+        ),
+        "safety_margin_violation_count": int(np.count_nonzero(safety_mask)),
+        "minimum_joint_limit_margin_rad": (
+            float(np.min(finite_margins)) if finite_margins.size else float("-inf")
+        ),
+        "hard_violations": hard_details,
+        "safety_margin_violations": safety_details,
+    }
 
 
 def clip_to_bounds(q: np.ndarray, bounds: Sequence[Tuple[float, float]]) -> np.ndarray:

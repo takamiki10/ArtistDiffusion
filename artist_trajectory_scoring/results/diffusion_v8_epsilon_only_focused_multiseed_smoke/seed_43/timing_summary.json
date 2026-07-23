@@ -1,0 +1,12 @@
+{
+  "active_cpu_workers": 10,
+  "cpu_scored_candidate_count": 40,
+  "cumulative_cpu_fk_scoring_time_s": 16.364424687000792,
+  "cumulative_cpu_fk_scoring_wall_time_s": 7.135008396999638,
+  "cumulative_gpu_sampling_time_s": 5.065789741000117,
+  "generated_base_candidate_count": 40,
+  "gpu_batch_size": 8,
+  "logical_cpu_count": 12,
+  "requested_cpu_workers": 10,
+  "total_wall_time_s": 24.409142988999974
+}

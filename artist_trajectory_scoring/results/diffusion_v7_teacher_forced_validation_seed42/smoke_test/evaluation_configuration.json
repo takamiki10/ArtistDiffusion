@@ -1,0 +1,204 @@
+{
+  "alphas": [
+    1.0
+  ],
+  "arguments": {
+    "alphas": [
+      1.0
+    ],
+    "best_ema_checkpoint": "models/diffusion_v7_cost_improving_residual_unet_100paths_seed42_full/best_ema_checkpoint.pt",
+    "best_raw_checkpoint": "models/diffusion_v7_cost_improving_residual_unet_100paths_seed42_full/best_raw_checkpoint.pt",
+    "dataset_dir": "data/cartesian_expert_dataset_v3/diffusion_v7_cost_improving_training_dataset_100paths",
+    "ddim_steps": 10,
+    "device": "cuda",
+    "eta": 0.0,
+    "k_values": [
+      1,
+      2
+    ],
+    "last_checkpoint": null,
+    "max_windows": 5,
+    "output_dir": "results/diffusion_v7_teacher_forced_validation_seed42/smoke_test",
+    "overwrite": false,
+    "plot_example_count": 5,
+    "robot_urdf": "robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/gazebo_xMateCR7.urdf",
+    "save_per_sample_results": true,
+    "seed": 42,
+    "smoke_test": true,
+    "v6_checkpoint": null
+  },
+  "assumptions": [
+    "Validation execution_horizon is 8, as produced by the v7 target generator.",
+    "The v6 optional comparison uses the raw 38-D condition normalized by its own checkpoint statistics.",
+    "Safety-margin proximity is reported but is not promoted to a hard joint-limit gate."
+  ],
+  "checkpoint_reports": [
+    {
+      "checkpoint": "v7_best_raw",
+      "checkpoint_path": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/models/diffusion_v7_cost_improving_residual_unet_100paths_seed42_full/best_raw_checkpoint.pt",
+      "diagnostic_only": false,
+      "diffusion_steps": 1000,
+      "epoch": 210,
+      "model_class": "train_conditional_diffusion_trajectory_v5_residual_unet.LocalResidualConditionalUNet1D",
+      "selected_state": "raw",
+      "status": "evaluated",
+      "v7_checkpoint": true
+    },
+    {
+      "checkpoint": "v7_best_ema",
+      "checkpoint_path": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/models/diffusion_v7_cost_improving_residual_unet_100paths_seed42_full/best_ema_checkpoint.pt",
+      "diagnostic_only": false,
+      "diffusion_steps": 1000,
+      "epoch": 297,
+      "model_class": "train_conditional_diffusion_trajectory_v5_residual_unet.LocalResidualConditionalUNet1D",
+      "selected_state": "ema",
+      "status": "evaluated",
+      "v7_checkpoint": true
+    }
+  ],
+  "classification_thresholds": {
+    "meaningful_gain_must_exceed_m": 7.5e-05,
+    "minimum_improved_window_fraction": 0.5,
+    "minimum_pre_fallback_safety_rate": 0.95,
+    "systematic_hard_failure_fraction": 0.05
+  },
+  "compatibility_concerns": [
+    "A v6 checkpoint is skipped unless explicitly supplied; its training split and residual distribution differ from v7.",
+    "Checkpoint model class metadata must resolve to the established local Conditional 1D U-Net implementation."
+  ],
+  "condition_feature_ordering": [
+    "desired_x",
+    "desired_y",
+    "desired_z",
+    "desired_dx",
+    "desired_dy",
+    "desired_dz",
+    "progress",
+    "prior_q_start_q1",
+    "prior_q_start_q2",
+    "prior_q_start_q3",
+    "prior_q_start_q4",
+    "prior_q_start_q5",
+    "prior_q_start_q6",
+    "prior_current_q1",
+    "prior_current_q2",
+    "prior_current_q3",
+    "prior_current_q4",
+    "prior_current_q5",
+    "prior_current_q6",
+    "prior_q1",
+    "prior_q2",
+    "prior_q3",
+    "prior_q4",
+    "prior_q5",
+    "prior_q6",
+    "prior_delta_from_start_q1",
+    "prior_delta_from_start_q2",
+    "prior_delta_from_start_q3",
+    "prior_delta_from_start_q4",
+    "prior_delta_from_start_q5",
+    "prior_delta_from_start_q6",
+    "prior_ee_x",
+    "prior_ee_y",
+    "prior_ee_z",
+    "prior_ee_error_x",
+    "prior_ee_error_y",
+    "prior_ee_error_z",
+    "prior_ee_error_norm"
+  ],
+  "ddim_eta": 0.0,
+  "ddim_steps": 10,
+  "evaluated_unique_window_count": 5,
+  "fk_convention": {
+    "active_joints": [
+      "joint1",
+      "joint2",
+      "joint3",
+      "joint4",
+      "joint5",
+      "joint6"
+    ],
+    "calls": [
+      "robot.update_cfg(cfg)",
+      "robot.get_transform(frame_to='xMateCR7_link6')"
+    ],
+    "end_effector_frame": "xMateCR7_link6",
+    "robot": "ROKAE xMateCR7",
+    "robot_link_fk_used": false
+  },
+  "nested_k_values": [
+    1,
+    2
+  ],
+  "oracle_use": "reporting only; never used for diffusion sample selection",
+  "primary_alpha": 1.0,
+  "recursive_propagation": false,
+  "resolved_device": "cuda",
+  "reused_components": {
+    "ddim_sampler": "evaluate_diffusion_v6_teacher_forced_validation.sample_batch",
+    "diffusion_schedule": "train_conditional_diffusion_trajectory_v6_strong_prior_residual_unet.build_schedule",
+    "joint_limits": "generate_ik_seed_path.get_joint_bounds/check_joint_limits",
+    "model_loader": "train_conditional_diffusion_trajectory_v6_strong_prior_residual_unet.instantiate_v5_model",
+    "robot_costs_and_gates": "generate_diffusion_v7_cost_improving_residual_targets"
+  },
+  "safety_convention": {
+    "execution_horizon_source": "validation_windows.npz",
+    "expected_execution_horizon": 8,
+    "hard_joint_limit_tolerance_rad": 1e-07,
+    "maximum_absolute_joint_step_gate_rad": 0.2,
+    "reporting_safety_margin_rad": 0.01
+  },
+  "sampling_initialization": "independent Gaussian noise",
+  "sampling_process": "full DDIM reverse diffusion",
+  "selection_rule": "Retain candidates passing the v7 target-generator acceptance gates and improving execution-prefix Cartesian mean error; choose minimum robot-aware delta_score, otherwise fall back to the stored prior.",
+  "teacher_forced": true,
+  "validation_path_names": [
+    "path_0039"
+  ],
+  "validation_report": {
+    "condition_feature_names": [
+      "desired_x",
+      "desired_y",
+      "desired_z",
+      "desired_dx",
+      "desired_dy",
+      "desired_dz",
+      "progress",
+      "prior_q_start_q1",
+      "prior_q_start_q2",
+      "prior_q_start_q3",
+      "prior_q_start_q4",
+      "prior_q_start_q5",
+      "prior_q_start_q6",
+      "prior_current_q1",
+      "prior_current_q2",
+      "prior_current_q3",
+      "prior_current_q4",
+      "prior_current_q5",
+      "prior_current_q6",
+      "prior_q1",
+      "prior_q2",
+      "prior_q3",
+      "prior_q4",
+      "prior_q5",
+      "prior_q6",
+      "prior_delta_from_start_q1",
+      "prior_delta_from_start_q2",
+      "prior_delta_from_start_q3",
+      "prior_delta_from_start_q4",
+      "prior_delta_from_start_q5",
+      "prior_delta_from_start_q6",
+      "prior_ee_x",
+      "prior_ee_y",
+      "prior_ee_z",
+      "prior_ee_error_x",
+      "prior_ee_error_y",
+      "prior_ee_error_z",
+      "prior_ee_error_norm"
+    ],
+    "maximum_duplicate_conditioning_discrepancy": 0.0,
+    "target_row_count": 419,
+    "unique_path_count": 20,
+    "unique_window_count": 360
+  }
+}

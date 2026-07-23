@@ -1,0 +1,24 @@
+Diffusion v8 focused multi-seed confirmation
+
+Checkpoint state: raw_last_epoch187
+Target scale: 1
+Output alpha: 0.125
+Sampling seeds: 43 44 45 46 47
+Population: full 360 primary + 36 difficult windows
+
+K=8 findings
+1. Mean accepted rate: 47.89%; historical v7: 36.10%; exceeds v7: True.
+2. Seeds exceeding v7: 5/5.
+3. Final safe-window rate is 100% for every seed: True.
+4. Mean fraction of paths with an accepted window: 86.00%; improvements appear across many paths under the 75% engineering threshold: True.
+5. K=1 mean accepted rate is 24.22% versus K=8 47.89%.
+6. Target-covered mean accepted rate is 54.00%; zero-target mean accepted rate is 29.56%.
+7. Difficult-path mean accepted rate is 0.56%. The difficult population is a separate stress test.
+8. Advance to anchored recursive rollout under the provisional engineering rule: True.
+
+Decision rule
+advance_to_anchored_rollout = K8 mean >= 0.40 AND at least 4 of 5 seeds exceed 0.361000 AND every seed is finally safe AND mean path coverage >= 0.75.
+This is an engineering decision rule, not a formal statistical significance test.
+
+Uncertainty note
+Windows from different sampling seeds are repeated evaluations of the same physical windows. They are not treated as statistically independent. The pooled accepted rate is descriptive only.
