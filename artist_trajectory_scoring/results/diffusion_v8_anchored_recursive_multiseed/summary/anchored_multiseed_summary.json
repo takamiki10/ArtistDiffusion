@@ -1,0 +1,68 @@
+{
+  "completed_seeds": [
+    43,
+    44,
+    45,
+    46,
+    47
+  ],
+  "engineering_decision": {
+    "advance_to_closed_loop": false,
+    "classification": "V8_ANCHORED_ENGINEERING_HOLD",
+    "complete_five_seed_evaluation": true,
+    "decision_k": 8,
+    "decision_note": "Provisional engineering rule over repeated stochastic evaluations of the fixed 20-path ordinary validation population; not a formal statistical test.",
+    "decision_population": "ordinary",
+    "every_seed_has_100_percent_finally_safe_ordinary_paths": true,
+    "maximum_actual_internal_joint_step_gate_pass": true,
+    "maximum_actual_internal_joint_step_rad": 0.1797328313505358,
+    "maximum_allowed_internal_joint_step_rad": 0.2,
+    "maximum_allowed_segment_correction_growth_rad_per_step": 1e-05,
+    "mean_boundary_anchoring_offset_growth_slope_per_step": 1.2080659564561575e-05,
+    "mean_cartesian_error_delta_growth_slope": -2.7686258446431964e-08,
+    "mean_cartesian_mean_error_delta": -5.405773565869469e-05,
+    "mean_fraction_ordinary_paths_internal_full_path_score_negative": 0.65,
+    "mean_fraction_ordinary_paths_robot_aware_improved": 0.65,
+    "mean_full_path_recomputed_delta_score": 4.890179032751538,
+    "mean_internal_full_path_robot_aware_delta_score": -0.04991559995854078,
+    "mean_legacy_full_path_robot_aware_delta_score": 4.890179032751538,
+    "mean_local_vs_full_delta_score_gap": 6.843048952742864,
+    "mean_segment_max_correction_growth_slope_per_step": 1.3374596756981842e-05,
+    "mean_segment_mean_correction_growth_slope_per_step": 1.2289215407185062e-05,
+    "mean_sum_selected_local_delta_score": -1.952869919991326,
+    "mean_total_robot_aware_delta_score": 4.890179032751538,
+    "required_fraction_ordinary_paths_robot_aware_improved": 0.6,
+    "required_seeds": [
+      43,
+      44,
+      45,
+      46,
+      47
+    ]
+  },
+  "largest_mean_positive_score_contribution_ordinary_k8": {
+    "internal": {
+      "component": "jerk",
+      "field": "internal_robot_score_contribution_jerk",
+      "mean_contribution": 0.11855104622293805
+    },
+    "legacy": {
+      "component": "boundary_step",
+      "field": "legacy_robot_score_contribution_boundary_step",
+      "mean_contribution": 4.933952586692267
+    }
+  },
+  "missing_seeds": [],
+  "population": {
+    "difficult_paths": [
+      "path_0306",
+      "path_0370"
+    ],
+    "difficult_paths_affect_decision": false,
+    "ordinary_path_count": 20
+  },
+  "score_semantics": {
+    "internal": "Evaluates the physically executed complete trajectory without an artificial post-terminal transition.",
+    "legacy": "Includes a diagnostic transition from the rollout endpoint to the strong-prior endpoint."
+  }
+}

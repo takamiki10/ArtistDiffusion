@@ -1907,7 +1907,7 @@ def save_path_plots(
         axis.plot(*result["ee"].T, label=method, color=colors[method], alpha=0.8)
     axis.legend(fontsize=7)
     figure.tight_layout()
-    figure.savefig(path_dir / "desired_vs_executed_cartesian.png", dpi=160)
+    figure.savefig(str(path_dir / "desired_vs_executed_cartesian.png"), dpi=160)
     plt.close(figure)
 
     def line_plot(filename: str, ylabel: str, series: Dict[str, np.ndarray]) -> None:
@@ -1919,7 +1919,7 @@ def save_path_plots(
         axis.grid(True, alpha=0.25)
         axis.legend(fontsize=7)
         figure.tight_layout()
-        figure.savefig(path_dir / filename, dpi=160)
+        figure.savefig(str(path_dir / filename), dpi=160)
         plt.close(figure)
 
     line_plot(
@@ -2009,7 +2009,9 @@ def save_path_plots(
         axis.grid(True, alpha=0.25)
     axes[0].legend(fontsize=7)
     figure.tight_layout()
-    figure.savefig(path_dir / "current_and_future_shift_boundaries.png", dpi=160)
+    figure.savefig(
+        str(path_dir / "current_and_future_shift_boundaries.png"), dpi=160
+    )
     plt.close(figure)
 
     figure, axes = plt.subplots(JOINT_DIM, 1, figsize=(11, 12), sharex=True)
@@ -2021,7 +2023,7 @@ def save_path_plots(
     axes[0].legend(fontsize=7)
     axes[-1].set_xlabel("Timestep")
     figure.tight_layout()
-    figure.savefig(path_dir / "joint_trajectory_comparison.png", dpi=160)
+    figure.savefig(str(path_dir / "joint_trajectory_comparison.png"), dpi=160)
     plt.close(figure)
 
     figure, axis = plt.subplots(figsize=(10, 5))
@@ -2035,7 +2037,7 @@ def save_path_plots(
     axis.grid(True, alpha=0.25)
     axis.legend(fontsize=7)
     figure.tight_layout()
-    figure.savefig(path_dir / "tail_blending_weights.png", dpi=160)
+    figure.savefig(str(path_dir / "tail_blending_weights.png"), dpi=160)
     plt.close(figure)
 
 
@@ -2074,7 +2076,7 @@ def save_aggregate_plots(
         axis.grid(True, alpha=0.25)
         axis.legend(fontsize=7)
         figure.tight_layout()
-        figure.savefig(plots_dir / filename, dpi=160)
+        figure.savefig(str(plots_dir / filename), dpi=160)
         plt.close(figure)
 
     paired_scatter(
@@ -2106,7 +2108,7 @@ def save_aggregate_plots(
     axis.set_ylabel("Path count")
     axis.legend()
     figure.tight_layout()
-    figure.savefig(plots_dir / "paths_improved_vs_worsened.png", dpi=160)
+    figure.savefig(str(plots_dir / "paths_improved_vs_worsened.png"), dpi=160)
     plt.close(figure)
 
     figure, axis = plt.subplots(figsize=(8, 6))
@@ -2127,7 +2129,9 @@ def save_aggregate_plots(
     axis.grid(True, alpha=0.25)
     axis.legend(fontsize=7)
     figure.tight_layout()
-    figure.savefig(plots_dir / "global_drift_vs_cartesian_improvement.png", dpi=160)
+    figure.savefig(
+        str(plots_dir / "global_drift_vs_cartesian_improvement.png"), dpi=160
+    )
     plt.close(figure)
 
     figure, axis = plt.subplots(figsize=(8, 6))
@@ -2146,7 +2150,7 @@ def save_aggregate_plots(
     axis.grid(True, alpha=0.25)
     axis.legend(fontsize=7)
     figure.tight_layout()
-    figure.savefig(plots_dir / "extension_clipping_vs_error.png", dpi=160)
+    figure.savefig(str(plots_dir / "extension_clipping_vs_error.png"), dpi=160)
     plt.close(figure)
 
     metrics = (
@@ -2166,7 +2170,7 @@ def save_aggregate_plots(
         axis.set_title(metric)
         axis.grid(True, axis="y", alpha=0.2)
     figure.tight_layout()
-    figure.savefig(plots_dir / "tail_mode_metric_comparison.png", dpi=160)
+    figure.savefig(str(plots_dir / "tail_mode_metric_comparison.png"), dpi=160)
     plt.close(figure)
 
 

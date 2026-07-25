@@ -1,0 +1,34 @@
+Diffusion v8.1 anchored recursive jerk-guard multiseed summary
+
+Sampling unit:
+  Paired repeated stochastic evaluations of fixed physical paths.
+  The five seeds are not independent physical path samples.
+
+v8.1 missing seeds: []
+baseline v8 missing seeds: []
+Decision population: ordinary paths, K=8
+Baseline v8 engineering-hold result is preserved.
+{
+  "all_final_trajectories_safe": true,
+  "baseline_p95_internal_score": 0.2683244574537513,
+  "classification": "V8_1_JERK_GUARD_ENGINEERING_IMPROVEMENT",
+  "complete_paired_development_evaluation": true,
+  "decision_k": 8,
+  "decision_population": "ordinary",
+  "development_data_note": "Seeds 43-47 became development data after inspecting v8 results. A final frozen v8.1 method needs fresh stochastic seeds such as 48-52 and preferably additional path-disjoint trajectories.",
+  "maximum_actual_internal_joint_step_rad": 0.17942954005218512,
+  "maximum_allowed_internal_joint_step_rad": 0.2,
+  "mean_cartesian_mean_error_delta": -1.5864226962141483e-05,
+  "mean_paired_internal_score_change": -0.006720029869991437,
+  "mean_paired_jerk_contribution_change": -0.1291096155636532,
+  "p95_internal_score": 0.0,
+  "paired_integrity_checks_passed": true,
+  "required_development_seeds": [
+    43,
+    44,
+    45,
+    46,
+    47
+  ],
+  "successful_engineering_improvement": true
+}

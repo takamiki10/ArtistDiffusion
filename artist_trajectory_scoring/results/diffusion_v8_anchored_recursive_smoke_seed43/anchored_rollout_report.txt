@@ -1,0 +1,13 @@
+Diffusion v8 anchored recursive rollout
+sampling_seed: 43
+checkpoint: raw_last_epoch187
+ordinary paths: 2
+difficult paths: 0
+decision population: ordinary K=8 only
+legacy score: includes a diagnostic transition from rollout endpoint to strong-prior endpoint
+internal score: evaluates the physically executed complete trajectory without that artificial post-terminal transition
+largest mean positive score contribution (ordinary K=8): {'internal': {'component': 'jerk', 'field': 'internal_robot_score_contribution_jerk', 'mean_contribution': 0.004349853529536561}, 'legacy': {'component': 'boundary_step', 'field': 'legacy_robot_score_contribution_boundary_step', 'mean_contribution': 14.217318203280094}}
+{
+  "decision_population_complete": false,
+  "note": "Final decision requires all 20 ordinary K=8 paths."
+}

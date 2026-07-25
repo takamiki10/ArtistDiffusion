@@ -1,0 +1,13 @@
+Diffusion v8.1 anchored recursive rollout with history-aware jerk guard
+sampling_seed: 43
+checkpoint: raw_last_epoch187
+history-aware jerk guard enabled: False
+history-aware jerk tolerance: 1e-12
+ordinary paths: 2
+difficult paths: 0
+decision population: ordinary K=8 only
+Candidate generation, DDIM, anchoring, safety gates, v7 compatibility gates, and full-path internal score are reused from v8.
+{
+  "decision_population_complete": false,
+  "note": "Final decision requires all 20 ordinary K=8 paths."
+}

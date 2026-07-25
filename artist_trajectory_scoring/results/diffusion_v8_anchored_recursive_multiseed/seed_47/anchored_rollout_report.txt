@@ -1,0 +1,33 @@
+Diffusion v8 anchored recursive rollout
+sampling_seed: 47
+checkpoint: raw_last_epoch187
+ordinary paths: 20
+difficult paths: 0
+decision population: ordinary K=8 only
+legacy score: includes a diagnostic transition from rollout endpoint to strong-prior endpoint
+internal score: evaluates the physically executed complete trajectory without that artificial post-terminal transition
+largest mean positive score contribution (ordinary K=8): {'internal': {'component': 'jerk', 'field': 'internal_robot_score_contribution_jerk', 'mean_contribution': 0.0890565290518959}, 'legacy': {'component': 'boundary_step', 'field': 'legacy_robot_score_contribution_boundary_step', 'mean_contribution': 4.201017601182133}}
+{
+  "all_finally_safe": true,
+  "decision_population_complete": true,
+  "fraction_paths_internal_full_path_score_negative": 0.6,
+  "fraction_paths_robot_aware_improved": 0.6,
+  "maximum_actual_internal_joint_step_gate_pass": true,
+  "maximum_actual_internal_joint_step_gate_rad": 0.2,
+  "maximum_actual_internal_joint_step_rad": 0.17941057527631143,
+  "maximum_allowed_segment_correction_growth_rad_per_step": 1e-05,
+  "mean_boundary_anchoring_offset_growth_slope_per_step": 1.0135489823970945e-05,
+  "mean_cartesian_error_delta_growth_slope": 8.711465258307595e-09,
+  "mean_cartesian_mean_error_delta": -5.509235850965623e-05,
+  "mean_full_path_recomputed_delta_score": 4.125809392403523,
+  "mean_internal_full_path_robot_aware_delta_score": -0.08157881373599402,
+  "mean_legacy_full_path_robot_aware_delta_score": 4.125809392403523,
+  "mean_local_vs_full_delta_score_gap": 6.197276129127941,
+  "mean_segment_max_correction_growth_slope_per_step": 5.0469706266587766e-06,
+  "mean_segment_mean_correction_growth_slope_per_step": 6.053400891549658e-06,
+  "mean_sum_selected_local_delta_score": -2.071466736724416,
+  "mean_total_robot_aware_delta_score": 4.125809392403523,
+  "note": "This is one repeated stochastic evaluation seed. The advance rule is evaluated only by the five-seed summarizer.",
+  "ordinary_k8_path_count": 20,
+  "segment_correction_growth_tolerance_pass": true
+}

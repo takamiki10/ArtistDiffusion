@@ -166,6 +166,35 @@ class PlotRecord:
     selected_ee: np.ndarray
 
 
+@dataclass(frozen=True)
+class PhysicalPathRecord:
+    """One authoritative physical path, independent of retained v8 targets."""
+
+    path_id: str
+    path_index: int
+    population: str
+    strong_prior_q: np.ndarray
+    desired_path: np.ndarray
+    prior_ee: np.ndarray
+
+
+@dataclass
+class ValidatedInferenceBundle:
+    """Frozen v8 inference objects validated against the training contract."""
+
+    model: torch.nn.Module
+    schedule: Any
+    normalization: Dict[str, np.ndarray]
+    feature_names: Tuple[str, ...]
+    device: torch.device
+    checkpoint_path: Path
+    checkpoint_state: str
+    checkpoint_epoch: int
+    checkpoint_state_hash: str
+    diffusion_steps: int
+    model_configuration: Dict[str, Any]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -2098,6 +2127,695 @@ def prepare_output_directory(args: argparse.Namespace) -> None:
             f"Evaluation outputs already exist: {existing}; pass --overwrite"
         )
     args.output_dir.mkdir(parents=True, exist_ok=True)
+
+
+def load_authoritative_physical_path_population(
+    dataset_dir: Path,
+    target_generation_dir: Path,
+    *,
+    include_difficult_paths: bool = True,
+) -> Sequence[PhysicalPathRecord]:
+    """Load complete paths from the same strong-prior source as this evaluator."""
+
+    dataset_dir = resolve_project_path(dataset_dir).resolve()
+    target_generation_dir = resolve_project_path(target_generation_dir).resolve()
+    metadata, _normalization, _features, _v7_features = validate_dataset_contract(
+        dataset_dir
+    )
+    source_arguments = metadata.get("source_target_generation_metadata", {}).get(
+        "arguments", {}
+    )
+    recorded_source = source_arguments.get("train_windows")
+    if not recorded_source:
+        raise KeyError(
+            "Dataset metadata does not record the authoritative strong-prior windows"
+        )
+    source_path = resolve_project_path(Path(str(recorded_source))).resolve()
+    recorded_targets = metadata.get("arguments", {}).get("targets_npz")
+    expected_targets = (target_generation_dir / "selected_targets.npz").resolve()
+    if not recorded_targets or resolve_project_path(
+        Path(str(recorded_targets))
+    ).resolve() != expected_targets:
+        raise ValueError(
+            "target_generation_dir differs from the source recorded by the "
+            "validated v8 dataset"
+        )
+
+    training_paths, validation_paths, difficult_paths = load_split_and_manifest(
+        dataset_dir
+    )
+    if set(training_paths) & set(validation_paths):
+        raise AssertionError("A validation path appears in training")
+    if tuple(difficult_paths) != DIFFICULT_PATHS:
+        raise ValueError(
+            f"Expected difficult paths {DIFFICULT_PATHS}, got {difficult_paths}"
+        )
+    data = v7_target_generator.load_window_data(source_path)
+    timelines = v7_target_generator.reconstruct_timelines(data)
+    selected_names = list(validation_paths)
+    if include_difficult_paths:
+        selected_names.extend(difficult_paths)
+    missing = sorted(set(selected_names) - set(timelines))
+    if missing:
+        raise ValueError(
+            f"Authoritative strong-prior source is missing paths: {missing}"
+        )
+
+    records: List[PhysicalPathRecord] = []
+    path_indices = {name: index for index, name in enumerate(selected_names)}
+    for path_name in selected_names:
+        timeline = timelines[path_name]
+        strong_prior_q = finite_array(
+            f"{path_name}.strong_prior_q",
+            np.asarray(timeline["prior_q"], dtype=np.float64),
+        )
+        desired_path = finite_array(
+            f"{path_name}.desired_path",
+            np.asarray(timeline["desired"], dtype=np.float64),
+        )
+        prior_ee = finite_array(
+            f"{path_name}.prior_ee",
+            np.asarray(timeline["prior_ee"], dtype=np.float64),
+        )
+        if strong_prior_q.shape != (100, TARGET_DIM):
+            raise ValueError(
+                f"{path_name} strong prior has shape {strong_prior_q.shape}"
+            )
+        if desired_path.shape != (100, 3) or prior_ee.shape != (100, 3):
+            raise ValueError(f"{path_name} Cartesian timeline is incompatible")
+        records.append(
+            PhysicalPathRecord(
+                path_id=path_name,
+                path_index=path_indices[path_name],
+                population=(
+                    "ordinary" if path_name in set(validation_paths) else "difficult"
+                ),
+                strong_prior_q=strong_prior_q,
+                desired_path=desired_path,
+                prior_ee=prior_ee,
+            )
+        )
+    ordinary = [record.path_id for record in records if record.population == "ordinary"]
+    if ordinary != list(validation_paths) or len(ordinary) != 20:
+        raise AssertionError(
+            "Authoritative population is not the deterministic 20-path validation split"
+        )
+    return tuple(records)
+
+
+def load_validated_inference_bundle(
+    dataset_dir: Path,
+    model_dir: Path,
+    checkpoint_state: str,
+    device: str,
+    ddim_steps: int,
+) -> ValidatedInferenceBundle:
+    """Load the frozen v8 raw epoch-187 state through the validated contract."""
+
+    if checkpoint_state != "raw_last_epoch187":
+        raise ValueError(
+            "Anchored v8 inference is frozen to checkpoint_state=raw_last_epoch187"
+        )
+    dataset_dir = resolve_project_path(dataset_dir).resolve()
+    model_dir = resolve_project_path(model_dir).resolve()
+    resolved_device = resolve_device(device)
+    metadata, normalization, feature_names, _v7_features = validate_dataset_contract(
+        dataset_dir
+    )
+    checkpoint_path = (model_dir / "last_checkpoint.pt").resolve()
+    checkpoint = v8_trainer.load_torch_checkpoint(
+        checkpoint_path, torch.device("cpu")
+    )
+    expected_model, expected_configuration = v6_trainer.instantiate_v5_model(
+        HORIZON, CONDITION_DIM, TARGET_DIM, 1000
+    )
+    del expected_model
+    diffusion_steps = validate_checkpoint_contract(
+        checkpoint,
+        checkpoint_path,
+        normalization,
+        feature_names,
+        sha256_file(dataset_dir / "normalization_stats.npz"),
+        sha256_file(dataset_dir / "dataset_metadata.json"),
+        expected_configuration,
+    )
+    epoch = int(checkpoint.get("epoch", -1))
+    if epoch != 187:
+        raise ValueError(
+            f"raw_last_epoch187 requires epoch 187, checkpoint contains {epoch}"
+        )
+    if ddim_steps > diffusion_steps:
+        raise ValueError(
+            f"ddim_steps={ddim_steps} exceeds checkpoint steps={diffusion_steps}"
+        )
+    state = extract_state(checkpoint, "raw", checkpoint_path)
+    model, model_configuration = v6_trainer.instantiate_v5_model(
+        HORIZON, CONDITION_DIM, TARGET_DIM, diffusion_steps
+    )
+    if dict(model_configuration) != dict(checkpoint["model_configuration"]):
+        raise ValueError("Reconstructed model configuration differs from checkpoint")
+    model.load_state_dict(state, strict=True)
+    model.to(resolved_device).eval()
+    schedule = v6_trainer.build_schedule(diffusion_steps, resolved_device)
+    schedule_metadata = checkpoint.get(
+        "diffusion_schedule",
+        checkpoint.get("diffusion_hyperparameters"),
+    )
+    if not isinstance(schedule_metadata, Mapping):
+        raise KeyError(
+            "Checkpoint diffusion schedule/hyperparameters are absent"
+        )
+    if schedule_metadata.get("beta_schedule") != "linear":
+        raise ValueError("Validated v8 inference requires the linear beta schedule")
+    return ValidatedInferenceBundle(
+        model=model,
+        schedule=schedule,
+        normalization={
+            key: np.asarray(value).copy()
+            for key, value in normalization.items()
+        },
+        feature_names=tuple(feature_names),
+        device=resolved_device,
+        checkpoint_path=checkpoint_path,
+        checkpoint_state=checkpoint_state,
+        checkpoint_epoch=epoch,
+        checkpoint_state_hash=state_dict_hash(state),
+        diffusion_steps=diffusion_steps,
+        model_configuration=dict(model_configuration),
+    )
+
+
+def build_recursive_condition_norm(
+    inference: ValidatedInferenceBundle,
+    path: PhysicalPathRecord,
+    anchored_prior_q: np.ndarray,
+    desired_path_window: np.ndarray,
+    current_q: np.ndarray,
+    window_start: int,
+    target_scale: float,
+    robot: v7_target_generator.RobotContext,
+) -> np.ndarray:
+    """Reconstruct the exact v7 38-D semantics, append scale, then normalize."""
+
+    anchored = finite_array(
+        "anchored_prior_q", np.asarray(anchored_prior_q, dtype=np.float64)
+    )
+    desired = finite_array(
+        "desired_path_window", np.asarray(desired_path_window, dtype=np.float64)
+    )
+    current = finite_array(
+        "current_q", np.asarray(current_q, dtype=np.float64).reshape(6)
+    )
+    if anchored.shape != (HORIZON, TARGET_DIM):
+        raise ValueError(f"anchored_prior_q has shape {anchored.shape}")
+    if desired.shape != (HORIZON, 3):
+        raise ValueError(f"desired_path_window has shape {desired.shape}")
+    if not np.array_equal(anchored[0], current):
+        raise ValueError("anchored_prior_q[0] must equal current_q exactly")
+    prior_ee = v7_target_generator.fk_trajectory(robot, anchored)
+    desired_delta = np.zeros_like(desired)
+    for offset in range(HORIZON):
+        requested_timestep = window_start + offset
+        if 0 < requested_timestep < len(path.desired_path):
+            timestep = requested_timestep
+            desired_delta[offset] = (
+                path.desired_path[timestep] - path.desired_path[timestep - 1]
+            )
+    progress_indices = np.minimum(
+        np.arange(window_start, window_start + HORIZON),
+        len(path.desired_path) - 1,
+    )
+    progress = progress_indices.astype(np.float64) / (
+        len(path.desired_path) - 1
+    )
+    q_start = path.strong_prior_q[0]
+    prior_error = prior_ee - desired
+    condition_v7 = np.concatenate(
+        (
+            desired,
+            desired_delta,
+            progress[:, None],
+            np.repeat(q_start[None, :], HORIZON, axis=0),
+            np.repeat(current[None, :], HORIZON, axis=0),
+            anchored,
+            anchored - q_start[None, :],
+            prior_ee,
+            prior_error,
+            np.linalg.norm(prior_error, axis=1, keepdims=True),
+        ),
+        axis=1,
+    )
+    expected_v7 = tuple(
+        str(value) for value in v7_dataset_builder.CONDITION_FEATURE_NAMES
+    )
+    expected_v8 = (*expected_v7, "target_scale")
+    if inference.feature_names != expected_v8:
+        raise ValueError("Validated inference condition feature order is incompatible")
+    if condition_v7.shape != (HORIZON, V7_CONDITION_DIM):
+        raise AssertionError(
+            f"Recursive v7 condition has shape {condition_v7.shape}"
+        )
+    raw = np.concatenate(
+        (
+            condition_v7,
+            np.full((HORIZON, 1), float(target_scale), dtype=np.float64),
+        ),
+        axis=1,
+    )
+    mean = np.asarray(
+        inference.normalization["condition_mean"], dtype=np.float64
+    )
+    std = np.asarray(inference.normalization["condition_std"], dtype=np.float64)
+    normalized = finite_array(
+        "recursive condition_norm", (raw - mean) / std
+    )
+    reconstructed = normalized * std + mean
+    if not np.allclose(
+        reconstructed, raw, rtol=FLOAT_RTOL, atol=FLOAT_ATOL
+    ):
+        raise ValueError("Recursive condition normalization round trip failed")
+    if not np.allclose(
+        normalized[:, 38], target_scale, rtol=0.0, atol=FLOAT_ATOL
+    ):
+        raise ValueError("target_scale was not appended before normalization")
+    return normalized.astype(np.float32)
+
+
+def sample_ddim_candidates(
+    inference: ValidatedInferenceBundle,
+    condition_norm: np.ndarray,
+    sampling_seeds: Sequence[int],
+    *,
+    ddim_steps: int,
+    eta: float,
+    gpu_batch_size: int,
+) -> np.ndarray:
+    """Sample exactly eight physical residuals using validated v6 DDIM."""
+
+    if len(sampling_seeds) != 8:
+        raise ValueError("Anchored nested-K evaluation requires exactly eight seeds")
+    if gpu_batch_size < 1:
+        raise ValueError("gpu_batch_size must be at least 1")
+    condition = finite_array(
+        "condition_norm", np.asarray(condition_norm, dtype=np.float64)
+    )
+    if condition.shape != (HORIZON, CONDITION_DIM):
+        raise ValueError(f"condition_norm has shape {condition.shape}")
+    batches: List[np.ndarray] = []
+    for batch_start in range(0, len(sampling_seeds), gpu_batch_size):
+        batch_seeds = sampling_seeds[
+            batch_start : batch_start + gpu_batch_size
+        ]
+        repeated = np.repeat(
+            condition.astype(np.float32)[None, :, :],
+            len(batch_seeds),
+            axis=0,
+        )
+        synchronize(inference.device)
+        sampled = v6_evaluator.sample_batch(
+            inference.model,
+            repeated,
+            batch_seeds,
+            inference.schedule,
+            ddim_steps,
+            "ddim",
+            eta,
+            inference.device,
+        )
+        synchronize(inference.device)
+        batches.append(np.asarray(sampled, dtype=np.float64))
+    sampled_norm = finite_array(
+        "sampled residual_q_norm", np.concatenate(batches, axis=0)
+    )
+    if sampled_norm.shape != (8, HORIZON, TARGET_DIM):
+        raise ValueError(
+            f"Validated sampler returned {sampled_norm.shape}, expected "
+            f"{(8, HORIZON, TARGET_DIM)}"
+        )
+    residual_mean = np.asarray(
+        inference.normalization["residual_mean"], dtype=np.float64
+    ).reshape(1, 1, TARGET_DIM)
+    residual_std = np.asarray(
+        inference.normalization["residual_std"], dtype=np.float64
+    ).reshape(1, 1, TARGET_DIM)
+    return finite_array(
+        "sampled residual_q",
+        sampled_norm * residual_std + residual_mean,
+    )
+
+
+def evaluate_candidate_with_validated_semantics(
+    *,
+    robot: v7_target_generator.RobotContext,
+    context: v7_target_generator.WindowContext,
+    anchored_prior_q: np.ndarray,
+    candidate_q: np.ndarray,
+    execution_horizon: int,
+    prior_metrics: Optional[Mapping[str, Any]] = None,
+) -> v7_evaluator.CandidateEvaluationResult:
+    """Apply the established FK, metrics, gates, and delta score verbatim."""
+
+    anchored = finite_array(
+        "anchored_prior_q", np.asarray(anchored_prior_q, dtype=np.float64)
+    )
+    candidate = finite_array(
+        "candidate_q", np.asarray(candidate_q, dtype=np.float64)
+    )
+    if anchored.shape != (HORIZON, TARGET_DIM):
+        raise ValueError(f"anchored_prior_q has shape {anchored.shape}")
+    if candidate.shape != anchored.shape:
+        raise ValueError("candidate_q shape differs from anchored_prior_q")
+    if not np.array_equal(context.prior_q, anchored):
+        raise ValueError("WindowContext prior_q is not the anchored prior")
+    validated_prior = (
+        dict(prior_metrics)
+        if prior_metrics is not None
+        else v7_evaluator.evaluate_metrics(
+            robot, context, anchored, execution_horizon
+        )
+    )
+    prior_hard_reasons = v7_evaluator.hard_safety_reasons(
+        validated_prior, validated_prior
+    )
+    if prior_hard_reasons:
+        raise RuntimeError(
+            f"Anchored prior is hard-unsafe: {list(prior_hard_reasons)}"
+        )
+    task = v7_evaluator.CandidateEvaluationTask(
+        candidate_id="anchored_candidate",
+        context=context,
+        candidate_q=candidate,
+        execution_horizon=execution_horizon,
+        prior_metrics=validated_prior,
+    )
+    return v7_evaluator.evaluate_candidate_task(task, robot)
+
+
+def compute_fk_positions(
+    robot: v7_target_generator.RobotContext,
+    trajectory_q: np.ndarray,
+) -> np.ndarray:
+    """Use the established xMateCR7 FK implementation."""
+
+    return v7_target_generator.fk_trajectory(
+        robot, np.asarray(trajectory_q, dtype=np.float64)
+    )
+
+
+def robot_aware_delta_score_components(
+    candidate: Mapping[str, Any],
+    prior: Mapping[str, Any],
+    weights: Optional[v7_target_generator.ScoreWeights] = None,
+    floors: Optional[v7_target_generator.MetricFloors] = None,
+) -> Dict[str, float]:
+    """Decompose the established v7 delta score without changing its formula."""
+
+    active_weights = weights or v7_target_generator.ScoreWeights()
+    active_floors = floors or v7_target_generator.MetricFloors()
+    terms = (
+        (
+            "cart_mean",
+            active_weights.cart_mean,
+            "prefix_cartesian_mean_error_m",
+            active_floors.cartesian_m,
+        ),
+        (
+            "cart_p95",
+            active_weights.cart_p95,
+            "prefix_cartesian_p95_error_m",
+            active_floors.cartesian_m,
+        ),
+        (
+            "cart_max",
+            active_weights.cart_max,
+            "prefix_cartesian_max_error_m",
+            active_floors.cartesian_m,
+        ),
+        (
+            "acceleration",
+            active_weights.acceleration,
+            "prefix_acceleration_cost",
+            active_floors.derivative,
+        ),
+        (
+            "jerk",
+            active_weights.jerk,
+            "prefix_jerk_cost",
+            active_floors.derivative,
+        ),
+        (
+            "boundary_step",
+            active_weights.boundary_step,
+            "boundary_step_max_abs_rad",
+            active_floors.boundary_rad,
+        ),
+        (
+            "boundary_acceleration",
+            active_weights.boundary_acceleration,
+            "boundary_acceleration_discontinuity",
+            active_floors.boundary_rad,
+        ),
+        (
+            "singularity",
+            active_weights.singularity,
+            "prefix_singularity_penalty",
+            active_floors.singularity,
+        ),
+    )
+    contributions = {
+        f"robot_score_contribution_{name}": float(
+            weight
+            * v7_target_generator.relative_delta(
+                float(candidate[metric]),
+                float(prior[metric]),
+                floor,
+            )
+        )
+        for name, weight, metric, floor in terms
+    }
+    contribution_sum = float(sum(contributions.values()))
+    established_score = float(
+        v7_target_generator.delta_score(
+            candidate,
+            prior,
+            active_weights,
+            active_floors,
+        )
+    )
+    residual = contribution_sum - established_score
+    if not np.isclose(
+        contribution_sum,
+        established_score,
+        rtol=1.0e-7,
+        atol=1.0e-9,
+    ):
+        raise AssertionError(
+            "Robot-aware score decomposition differs from established "
+            f"delta_score: sum={contribution_sum:.17g}, "
+            f"score={established_score:.17g}, residual={residual:.17g}"
+        )
+    contributions["robot_score_contribution_sum"] = contribution_sum
+    contributions["robot_score_decomposition_residual"] = residual
+    return contributions
+
+
+def compute_full_trajectory_metrics(
+    *,
+    robot: v7_target_generator.RobotContext,
+    strong_prior_q: np.ndarray,
+    rollout_q: np.ndarray,
+    desired_path: np.ndarray,
+) -> Dict[str, Any]:
+    """Compare full paths with the established metrics and v7 delta score."""
+
+    prior_q = finite_array(
+        "strong_prior_q", np.asarray(strong_prior_q, dtype=np.float64)
+    )
+    candidate_q = finite_array(
+        "rollout_q", np.asarray(rollout_q, dtype=np.float64)
+    )
+    desired = finite_array(
+        "desired_path", np.asarray(desired_path, dtype=np.float64)
+    )
+    if prior_q.shape != candidate_q.shape or prior_q.ndim != 2:
+        raise ValueError("Full prior and rollout trajectories have unequal shapes")
+    if prior_q.shape[1] != TARGET_DIM or desired.shape != (len(prior_q), 3):
+        raise ValueError("Full-path trajectory shapes are incompatible")
+    prior_ee = compute_fk_positions(robot, prior_q)
+    context = v7_target_generator.WindowContext(
+        path_name="full_path",
+        path_index=0,
+        window_start=0,
+        prior_q=prior_q,
+        desired=desired,
+        prior_ee=prior_ee,
+        previous_q=None,
+        previous_previous_q=None,
+        tail_q=prior_q[-1],
+        tail_next_q=None,
+    )
+    execution_horizon = len(prior_q)
+    prior_metrics = v7_evaluator.evaluate_metrics(
+        robot, context, prior_q, execution_horizon
+    )
+    rollout_metrics = v7_evaluator.evaluate_metrics(
+        robot, context, candidate_q, execution_horizon
+    )
+    prior_hard_reasons = v7_evaluator.hard_safety_reasons(
+        prior_metrics, prior_metrics
+    )
+    rollout_hard_reasons = v7_evaluator.hard_safety_reasons(
+        rollout_metrics, prior_metrics
+    )
+    total_delta_score = v7_target_generator.delta_score(
+        rollout_metrics,
+        prior_metrics,
+        v7_target_generator.ScoreWeights(),
+        v7_target_generator.MetricFloors(),
+    )
+    score_components = robot_aware_delta_score_components(
+        rollout_metrics,
+        prior_metrics,
+        v7_target_generator.ScoreWeights(),
+        v7_target_generator.MetricFloors(),
+    )
+    internal_prior_metrics = dict(prior_metrics)
+    internal_rollout_metrics = dict(rollout_metrics)
+    for metrics in (internal_prior_metrics, internal_rollout_metrics):
+        metrics.update(
+            {
+                "entry_boundary_available": 0.0,
+                "entry_boundary_step_max_abs_rad": 0.0,
+                "entry_boundary_step_l2_rad": 0.0,
+                "exit_boundary_step_max_abs_rad": 0.0,
+                "exit_boundary_step_l2_rad": 0.0,
+                "boundary_step_max_abs_rad": 0.0,
+                "boundary_step_l2_rad": 0.0,
+                "boundary_acceleration_discontinuity": 0.0,
+                "boundary_finite": 1.0,
+            }
+        )
+    internal_delta_score = v7_target_generator.delta_score(
+        internal_rollout_metrics,
+        internal_prior_metrics,
+        v7_target_generator.ScoreWeights(),
+        v7_target_generator.MetricFloors(),
+    )
+    internal_score_components = robot_aware_delta_score_components(
+        internal_rollout_metrics,
+        internal_prior_metrics,
+        v7_target_generator.ScoreWeights(),
+        v7_target_generator.MetricFloors(),
+    )
+    output: Dict[str, Any] = {}
+    output.update(v7_target_generator.flatten_metrics("prior", prior_metrics))
+    output.update(v7_target_generator.flatten_metrics("rollout", rollout_metrics))
+    metric_pairs = {
+        "cartesian_mean_error": "full_cartesian_mean_error_m",
+        "cartesian_rms_error": "full_cartesian_rms_error_m",
+        "cartesian_max_error": "full_cartesian_max_error_m",
+        "velocity_cost": "full_velocity_cost",
+        "acceleration_cost": "full_acceleration_cost",
+        "jerk_cost": "full_jerk_cost",
+        "joint_limit_cost": "full_hard_joint_limit_violation_magnitude",
+        "singularity_cost": "full_singularity_penalty",
+        "minimum_manipulability": "full_minimum_manipulability",
+    }
+    for output_name, metric_name in metric_pairs.items():
+        prior_value = float(prior_metrics[metric_name])
+        rollout_value = float(rollout_metrics[metric_name])
+        output[f"prior_{output_name}"] = prior_value
+        output[f"rollout_{output_name}"] = rollout_value
+        output[f"{output_name}_delta"] = rollout_value - prior_value
+    output.update(
+        {
+            "prior_total_robot_aware_score": 0.0,
+            "rollout_total_robot_aware_score": float(total_delta_score),
+            "total_robot_aware_delta_score": float(total_delta_score),
+            "legacy_full_path_robot_aware_delta_score": float(
+                total_delta_score
+            ),
+            "internal_full_path_robot_aware_delta_score": float(
+                internal_delta_score
+            ),
+            "prior_full_path_safety_pass": int(not prior_hard_reasons),
+            "full_path_safety_pass": int(not rollout_hard_reasons),
+            "failed_hard_safety_gate": "|".join(rollout_hard_reasons),
+            "maximum_joint_step": float(
+                rollout_metrics["maximum_absolute_joint_step_rad"]
+            ),
+            "prior_ee": prior_ee,
+            "rollout_ee": np.asarray(rollout_metrics["ee"], dtype=np.float64),
+            "first_failing_sample": -1,
+        }
+    )
+    output.update(score_components)
+    output.update(
+        {
+            f"legacy_{key}": value
+            for key, value in score_components.items()
+        }
+    )
+    output.update(
+        {
+            f"internal_{key}": value
+            for key, value in internal_score_components.items()
+        }
+    )
+    terminal_joint_deviation = candidate_q[-1] - prior_q[-1]
+    actual_internal_steps = np.diff(candidate_q, axis=0)
+    output.update(
+        {
+            "terminal_joint_deviation_norm_rad": float(
+                np.linalg.norm(terminal_joint_deviation)
+            ),
+            "terminal_joint_deviation_max_rad": float(
+                np.max(np.abs(terminal_joint_deviation))
+            ),
+            "terminal_joint_deviation_per_joint_rad": (
+                terminal_joint_deviation.copy()
+            ),
+            "terminal_cartesian_deviation_from_prior_m": float(
+                np.linalg.norm(
+                    np.asarray(rollout_metrics["ee"])[-1] - prior_ee[-1]
+                )
+            ),
+            "legacy_terminal_boundary_step_contribution": float(
+                score_components[
+                    "robot_score_contribution_boundary_step"
+                ]
+            ),
+            "legacy_terminal_boundary_acceleration_contribution": float(
+                score_components[
+                    "robot_score_contribution_boundary_acceleration"
+                ]
+            ),
+            "maximum_actual_internal_joint_step_rad": float(
+                np.max(np.abs(actual_internal_steps))
+                if actual_internal_steps.size
+                else 0.0
+            ),
+        }
+    )
+    hard_violations = rollout_metrics.get("hard_limit_violations", ())
+    if hard_violations:
+        first = hard_violations[0]
+        if isinstance(first, Mapping):
+            output["first_failing_sample"] = int(
+                first.get("timestep", first.get("index", -1))
+            )
+    if (
+        output["first_failing_sample"] == -1
+        and "maximum_joint_step_gate" in rollout_hard_reasons
+    ):
+        steps = np.max(np.abs(np.diff(candidate_q, axis=0)), axis=1)
+        failing = np.flatnonzero(
+            steps
+            > MAXIMUM_JOINT_STEP_RAD + HARD_JOINT_LIMIT_TOLERANCE_RAD
+        )
+        if len(failing):
+            output["first_failing_sample"] = int(failing[0] + 1)
+    return output
 
 
 def json_safe(value: Any) -> Any:
