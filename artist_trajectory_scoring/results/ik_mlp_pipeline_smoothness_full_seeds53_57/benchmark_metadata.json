@@ -1,0 +1,807 @@
+{
+  "analysis": "multi-path multi-seed IK/MLP/pipeline smoothness benchmark",
+  "bootstrap_iterations": 4000,
+  "bootstrap_seed": 20260728,
+  "boundary_energy_normalization": "integrated squared jerk fraction divided by trapezoidal boundary-time fraction",
+  "boundary_enrichment_interpretation": ">1 concentrated near boundaries; approximately 1 proportional to covered time; <1 depleted near boundaries",
+  "boundary_primary_radius": 2,
+  "boundary_radius": 2,
+  "boundary_sensitivity_radii": [
+    0,
+    1,
+    2
+  ],
+  "claim_eligibility_rules": "finite/malformed validation, accepted pipeline when required, mean and maximum Cartesian FK error within threshold, orientation threshold when a target orientation exists, complete claim-eligible timing",
+  "claim_eligible": true,
+  "command": "benchmark_ik_mlp_pipeline_smoothness.py --ik_root data/cartesian_expert_dataset_v3/cold_ik_test_timed/test --mlp_root data/cartesian_expert_dataset_v3/mlp_v3_test_predictions --pipeline_root results/diffusion_v8_1_path_disjoint_confirmation_test30_seeds53_57 --output_dir results/ik_mlp_pipeline_smoothness_full_seeds53_57 --path_ids path_0001 path_0003 path_0006 path_0011 path_0014 path_0017 path_0019 path_0022 path_0025 path_0029 path_0033 path_0037 path_0039 path_0043 path_0046 path_0050 path_0053 path_0056 path_0060 path_0063 path_0066 path_0070 path_0073 path_0076 path_0078 path_0081 path_0087 path_0091 path_0094 path_0098 --pipeline_seeds 53 54 55 56 57 --timing_policy common_duration --common_duration_s 10 --common_samples 100 --execution_horizon 8 --boundary_radius 2 --boundary_sensitivity_radii 0 1 2 --mean_cartesian_error_threshold_m 0.01 --max_cartesian_error_threshold_m 0.03 --strict",
+  "common_duration_s": 10.0,
+  "common_samples": 100,
+  "complete_trajectory_required": true,
+  "creation_timestamp_utc": "2026-07-27T22:28:09.767358+00:00",
+  "derivative_implementation": "analyze_prior_vs_diffusion_contribution_v8_1.derivatives; three successive numpy.gradient(..., timestamps, axis=0, edge_order=2)",
+  "endpoint_exclusion": 3,
+  "exclusion_reasons": {
+    "paths": [],
+    "trajectories": [
+      {
+        "method": "mlp",
+        "path_id": "path_0001",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0001/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0003",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0003/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0006",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0006/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0011",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0011/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0014",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0014/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0017",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0017/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0019",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0019/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0022",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0022/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0025",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0025/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0029",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0029/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0033",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0033/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0037",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0037/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0039",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0039/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0043",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0043/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0046",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0046/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0050",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0050/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0053",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0053/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0056",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0056/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0060",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0060/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0063",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0063/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0066",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0066/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0070",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0070/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0073",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0073/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0076",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0076/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0078",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0078/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0081",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0081/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0087",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0087/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0091",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0091/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0094",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0094/predicted_q.csv"
+      },
+      {
+        "method": "mlp",
+        "path_id": "path_0098",
+        "reason": "mean_cartesian_error_threshold;max_cartesian_error_threshold",
+        "seed": "",
+        "selected_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0098/predicted_q.csv"
+      }
+    ]
+  },
+  "execution_horizon": 8,
+  "fk_implementation": "evaluate_diffusion_v7_teacher_forced_validation.make_robot_context + orientation_aware_adaptive_ik.trajectory_full_transform_fk",
+  "high_frequency_fraction": 0.25,
+  "max_cartesian_error_threshold_m": 0.03,
+  "max_cartesian_threshold_source": "command_line:--max_cartesian_error_threshold_m",
+  "mean_cartesian_error_threshold_m": 0.01,
+  "mean_cartesian_threshold_source": "command_line:--mean_cartesian_error_threshold_m",
+  "orientation_error_threshold_rad": 0.05,
+  "orientation_threshold_source": "validate_diffusion_v8_1_deployment_output.MAXIMUM_ALLOWED_ORIENTATION_ERROR_GATE_RAD",
+  "path_discovery_rules": {
+    "path_glob": "path_*",
+    "pipeline_artifact": "deployment_trajectory_full.npz:final_q or trajectories/*/anchored_rollout_k8.npz:rollout_q with anchored_full_path_metrics full_path_safety_pass",
+    "pipeline_seed_glob": "*seed*"
+  },
+  "path_ids_requested": [
+    "path_0001",
+    "path_0003",
+    "path_0006",
+    "path_0011",
+    "path_0014",
+    "path_0017",
+    "path_0019",
+    "path_0022",
+    "path_0025",
+    "path_0029",
+    "path_0033",
+    "path_0037",
+    "path_0039",
+    "path_0043",
+    "path_0046",
+    "path_0050",
+    "path_0053",
+    "path_0056",
+    "path_0060",
+    "path_0063",
+    "path_0066",
+    "path_0070",
+    "path_0073",
+    "path_0076",
+    "path_0078",
+    "path_0081",
+    "path_0087",
+    "path_0091",
+    "path_0094",
+    "path_0098"
+  ],
+  "paths_discovered": [
+    "path_0001",
+    "path_0003",
+    "path_0006",
+    "path_0011",
+    "path_0014",
+    "path_0017",
+    "path_0019",
+    "path_0022",
+    "path_0025",
+    "path_0029",
+    "path_0033",
+    "path_0037",
+    "path_0039",
+    "path_0043",
+    "path_0046",
+    "path_0050",
+    "path_0053",
+    "path_0056",
+    "path_0060",
+    "path_0063",
+    "path_0066",
+    "path_0070",
+    "path_0073",
+    "path_0076",
+    "path_0078",
+    "path_0081",
+    "path_0087",
+    "path_0091",
+    "path_0094",
+    "path_0098"
+  ],
+  "paths_evaluated": [
+    "path_0001",
+    "path_0003",
+    "path_0006",
+    "path_0011",
+    "path_0014",
+    "path_0017",
+    "path_0019",
+    "path_0022",
+    "path_0025",
+    "path_0029",
+    "path_0033",
+    "path_0037",
+    "path_0039",
+    "path_0043",
+    "path_0046",
+    "path_0050",
+    "path_0053",
+    "path_0056",
+    "path_0060",
+    "path_0063",
+    "path_0066",
+    "path_0070",
+    "path_0073",
+    "path_0076",
+    "path_0078",
+    "path_0081",
+    "path_0087",
+    "path_0091",
+    "path_0094",
+    "path_0098"
+  ],
+  "paths_skipped": [],
+  "pipeline_best_seed_analysis": "secondary; one seed selected by minimum eligible RMS jerk and metric-specific best/worst seeds recorded",
+  "pipeline_primary_aggregation": "median across eligible accepted diffusion seeds per complete path",
+  "repository_commit": "f05da70062295aacb80b5e041af44fb04529d352",
+  "representative_paths_and_seeds": {
+    "best": {
+      "path_id": "path_0043",
+      "pipeline_seed": 53
+    },
+    "median": {
+      "path_id": "path_0014",
+      "pipeline_seed": 53
+    },
+    "worst": {
+      "path_id": "path_0056",
+      "pipeline_seed": 53
+    }
+  },
+  "roots": {
+    "ik": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/cold_ik_test_timed/test",
+    "mlp": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions",
+    "pipeline": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/diffusion_v8_1_path_disjoint_confirmation_test30_seeds53_57"
+  },
+  "seeds_accepted_per_path": {
+    "path_0001": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0003": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0006": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0011": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0014": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0017": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0019": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0022": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0025": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0029": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0033": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0037": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0039": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0043": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0046": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0050": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0053": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0056": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0060": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0063": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0066": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0070": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0073": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0076": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0078": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0081": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0087": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0091": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0094": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0098": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ]
+  },
+  "seeds_discovered_per_path": {
+    "path_0001": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0003": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0006": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0011": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0014": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0017": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0019": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0022": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0025": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0029": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0033": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0037": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0039": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0043": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0046": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0050": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0053": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0056": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0060": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0063": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0066": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0070": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0073": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0076": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0078": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0081": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0087": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0091": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0094": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ],
+    "path_0098": [
+      53,
+      54,
+      55,
+      56,
+      57
+    ]
+  },
+  "spectral_frequency_cutoff_hz": 3.7619999999999965,
+  "spectral_method": "mean-removed real FFT squared magnitude",
+  "spectral_signal": "acceleration",
+  "statistical_methods": "path-level Friedman, Wilcoxon signed-rank, deterministic paired bootstrap, Holm-Bonferroni",
+  "timing_policy": "common_duration",
+  "warnings": [
+    "Low jerk alone does not establish a superior trajectory if Cartesian tracking requirements are not satisfied.",
+    "Primary pipeline path-level results use the median across eligible accepted diffusion seeds.",
+    "Statistical unit is one complete path, never an individual sample.",
+    "Boundary jerk-energy fraction must be interpreted relative to boundary time coverage. Enrichment near 1 indicates no concentration.",
+    "Boundary enrichment below 1 does not necessarily imply a globally smoother trajectory; it only indicates reduced concentration near the chosen boundary indices."
+  ]
+}

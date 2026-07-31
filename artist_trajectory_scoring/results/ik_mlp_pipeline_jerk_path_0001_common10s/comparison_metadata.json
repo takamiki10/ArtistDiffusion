@@ -1,0 +1,212 @@
+{
+  "aligned_duration_s": 10.0,
+  "aligned_grid_uniform": true,
+  "aligned_sample_count": 100,
+  "aligned_time_end_s": 10.0,
+  "aligned_time_start_s": 0.0,
+  "analysis": "saved IK vs MLP vs proposed-pipeline joint jerk comparison",
+  "claim_eligible": true,
+  "common_duration_s": 10.0,
+  "common_sample_count": 100,
+  "complete_trajectory_used": true,
+  "creation_command": "compare_ik_mlp_pipeline_jerk_over_time.py --ik_path data/cartesian_expert_dataset_v3/cold_ik_test_timed/test/path_0001 --mlp_path data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0001 --pipeline_path results/diffusion_v8_1_deployment_smoke_path_0001_seed53 --path_id path_0001 --timing_policy common_duration --common_duration_s 10 --common_samples 100 --title 'Path 0001: IK vs MLP vs Proposed Pipeline' --output_dir results/ik_mlp_pipeline_jerk_path_0001_common10s",
+  "creation_timestamp_utc": "2026-07-27T14:51:16.011268+00:00",
+  "derivative_implementation_reused": "analyze_prior_vs_diffusion_contribution_v8_1.derivatives: three successive numpy.gradient calls with timestamps, axis=0, edge_order=2",
+  "dt_override_s": null,
+  "duration_standardized": true,
+  "effective_dt_s": 0.1010101010101011,
+  "interpolation_method": "SciPy CubicSpline over normalized progress, component-wise, no extrapolation; exact endpoints restored",
+  "interpolation_used": true,
+  "methods": {
+    "ik": {
+      "aligned_duration_s": 10.0,
+      "aligned_sample_count": 100,
+      "alignment": {
+        "first_joint_position_difference_after_interpolation": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "interpolation_sample_count": 100,
+        "last_joint_position_difference_after_interpolation": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "original_duration_s": 1.0,
+        "original_progress_range": [
+          0.0,
+          1.0
+        ],
+        "original_sample_count": 100,
+        "original_timestamp_source": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/cold_ik_test_timed/test/path_0001/expert_q.csv:t",
+        "progress_source": "relative saved timestamps"
+      },
+      "cartesian_target_available": true,
+      "normalized_trajectory_shape": [
+        100,
+        6
+      ],
+      "original_duration_s": 1.0,
+      "original_effective_dt_s": 0.01010101,
+      "original_sample_count": 100,
+      "original_trajectory_shape": [
+        100,
+        6
+      ],
+      "pipeline_selection_evidence": null,
+      "provided_source_path": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/cold_ik_test_timed/test/path_0001",
+      "selected_array_key": null,
+      "selected_file_sha256": "16fc96e6eb43186201cdc06d700d717cc870588a9000be31047d0d51e30d9013",
+      "selected_trajectory_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/cold_ik_test_timed/test/path_0001/expert_q.csv",
+      "source_input_or_stroke_identifiers": [
+        "path_0001"
+      ],
+      "timestamp_source": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/cold_ik_test_timed/test/path_0001/expert_q.csv:t",
+      "warnings": []
+    },
+    "mlp": {
+      "aligned_duration_s": 10.0,
+      "aligned_sample_count": 100,
+      "alignment": {
+        "first_joint_position_difference_after_interpolation": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "interpolation_sample_count": 100,
+        "last_joint_position_difference_after_interpolation": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "original_duration_s": 1.0,
+        "original_progress_range": [
+          0.0,
+          1.0
+        ],
+        "original_sample_count": 100,
+        "original_timestamp_source": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0001/predicted_q.csv:t",
+        "progress_source": "relative saved timestamps"
+      },
+      "cartesian_target_available": false,
+      "normalized_trajectory_shape": [
+        100,
+        6
+      ],
+      "original_duration_s": 1.0,
+      "original_effective_dt_s": 0.010101020299999985,
+      "original_sample_count": 100,
+      "original_trajectory_shape": [
+        100,
+        6
+      ],
+      "pipeline_selection_evidence": null,
+      "provided_source_path": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0001",
+      "selected_array_key": null,
+      "selected_file_sha256": "c14cf86ce2f415dd2ed4db42eb6d76e79d8bfe2075c37380cd3c0b5028568bfa",
+      "selected_trajectory_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0001/predicted_q.csv",
+      "source_input_or_stroke_identifiers": [
+        "path_0001"
+      ],
+      "timestamp_source": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/data/cartesian_expert_dataset_v3/mlp_v3_test_predictions/path_0001/predicted_q.csv:t",
+      "warnings": []
+    },
+    "pipeline": {
+      "aligned_duration_s": 10.0,
+      "aligned_sample_count": 100,
+      "alignment": {
+        "first_joint_position_difference_after_interpolation": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "interpolation_sample_count": 100,
+        "last_joint_position_difference_after_interpolation": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "original_duration_s": 10.0,
+        "original_progress_range": [
+          0.0,
+          1.0
+        ],
+        "original_sample_count": 100,
+        "original_timestamp_source": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/diffusion_v8_1_deployment_smoke_path_0001_seed53/deployment_trajectory_full.npz:timestamps",
+        "progress_source": "relative saved timestamps"
+      },
+      "cartesian_target_available": true,
+      "normalized_trajectory_shape": [
+        100,
+        6
+      ],
+      "original_duration_s": 10.0,
+      "original_effective_dt_s": 0.1010101010101011,
+      "original_sample_count": 100,
+      "original_trajectory_shape": [
+        100,
+        6
+      ],
+      "pipeline_selection_evidence": "recorded verdict: V8_1_DEPLOYMENT_TRAJECTORY_ACCEPTED",
+      "provided_source_path": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/diffusion_v8_1_deployment_smoke_path_0001_seed53",
+      "selected_array_key": "final_q",
+      "selected_file_sha256": "eba6691184a368a5ccef0a0e4aa53d2e165ef7a91899cdd6c1717a926fc289f8",
+      "selected_trajectory_file": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/diffusion_v8_1_deployment_smoke_path_0001_seed53/deployment_trajectory_full.npz",
+      "source_input_or_stroke_identifiers": [
+        "path_0001"
+      ],
+      "timestamp_source": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/diffusion_v8_1_deployment_smoke_path_0001_seed53/deployment_trajectory_full.npz:timestamps",
+      "warnings": []
+    }
+  },
+  "original_timing_preserved": false,
+  "path_validation": {
+    "cartesian_target_comparisons": 2,
+    "common_identities": [
+      "path_0001"
+    ],
+    "discovered_identities": {
+      "ik": [
+        "path_0001"
+      ],
+      "mlp": [
+        "path_0001"
+      ],
+      "pipeline": [
+        "path_0001"
+      ]
+    },
+    "requested_path_id": "path_0001",
+    "requested_stroke_id": null
+  },
+  "progress_grid_source": "per-method relative saved timestamps mapped to shared linspace(0,1)",
+  "progress_interpolation_used": true,
+  "repository_commit_hash": "f05da70062295aacb80b5e041af44fb04529d352",
+  "shared_interval_crop_used": false,
+  "smoothing_or_filtering": "none",
+  "statistical_scope": "trajectory-level descriptive comparison only; time samples are not treated as independent experimental replicates",
+  "timing_methodology": "Complete trajectories were interpolated over normalized progress and evaluated on a standardized 10 s physical timeline.",
+  "timing_policy": "common_duration",
+  "warnings": [
+    "This comparison evaluates smoothness under a standardized execution duration, not the methods' original execution times."
+  ]
+}

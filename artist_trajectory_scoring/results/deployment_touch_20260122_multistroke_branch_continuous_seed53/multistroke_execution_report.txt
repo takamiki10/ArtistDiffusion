@@ -1,0 +1,27 @@
+Multistroke full-pose execution
+verdict: MULTISTROKE_EXECUTION_ACCEPTED
+stroke_count: 3
+sample_count: 508
+segment_count: 12
+rejection_reasons: []
+maximum_consecutive_absolute_joint_step_rad: 0.016708239
+maximum_observed_cartesian_error_m: 0.000094887
+maximum_observed_orientation_error_rad: 0.000026347
+maximum_observed_z_tracking_error_m: 0.000093048
+
+Operator start requirement:
+The operator must move the robot to q[0], the solved initial hover state, before starting. No motion from an arbitrary physical robot state is planned.
+
+legacy_smartjoint_csv: results/deployment_touch_20260122_multistroke_branch_continuous_seed53/SmartJoint_Data_diffusion.csv
+legacy_smartjoint_rows: 508
+legacy_drawing_stroke_ids: [1, 2, 3]
+
+transition_diagnostics:
+{"endpoint_end_exact": true, "endpoint_start_exact": true, "forward_gate_pass": true, "maximum_joint_step_after_endpoint_pinning": 0.011288362446668532, "maximum_joint_step_before_endpoint_pinning": 0.011288362446668532, "reverse_gate_pass": true, "segment_type": "initial_descent", "selected_direction": "forward", "selected_gate_pass": true, "stroke_index": 0}
+{"endpoint_end_exact": true, "endpoint_start_exact": true, "forward_gate_pass": true, "maximum_joint_step_after_endpoint_pinning": 0.01505631210438263, "maximum_joint_step_before_endpoint_pinning": 0.01505631210438263, "reverse_gate_pass": true, "segment_type": "lift", "selected_direction": "forward", "selected_gate_pass": true, "stroke_index": 0}
+{"coupled_hover_candidate": "preliminary_hover_travel_final_state_seed", "endpoint_end_exact": true, "endpoint_start_exact": true, "forward_gate_pass": true, "maximum_joint_step_after_endpoint_pinning": 0.0027762348737918607, "maximum_joint_step_before_endpoint_pinning": 0.0027762348737918607, "reverse_gate_pass": true, "segment_type": "hover_travel", "selected_direction": "reverse", "selected_gate_pass": true, "stroke_index": 1}
+{"coupled_hover_candidate": "preliminary_hover_travel_final_state_seed", "endpoint_end_exact": true, "endpoint_start_exact": true, "forward_gate_pass": true, "maximum_joint_step_after_endpoint_pinning": 0.015765509387377752, "maximum_joint_step_before_endpoint_pinning": 0.015765509387377752, "reverse_gate_pass": true, "segment_type": "descent", "selected_direction": "reverse", "selected_gate_pass": true, "stroke_index": 1}
+{"endpoint_end_exact": true, "endpoint_start_exact": true, "forward_gate_pass": true, "maximum_joint_step_after_endpoint_pinning": 0.016708238656928054, "maximum_joint_step_before_endpoint_pinning": 0.016708238656928054, "reverse_gate_pass": true, "segment_type": "lift", "selected_direction": "reverse", "selected_gate_pass": true, "stroke_index": 1}
+{"coupled_hover_candidate": "preliminary_hover_travel_final_state_seed", "endpoint_end_exact": true, "endpoint_start_exact": true, "forward_gate_pass": true, "maximum_joint_step_after_endpoint_pinning": 0.0033808531649035523, "maximum_joint_step_before_endpoint_pinning": 0.0033808531649035523, "reverse_gate_pass": true, "segment_type": "hover_travel", "selected_direction": "forward", "selected_gate_pass": true, "stroke_index": 2}
+{"coupled_hover_candidate": "preliminary_hover_travel_final_state_seed", "endpoint_end_exact": true, "endpoint_start_exact": true, "forward_gate_pass": true, "maximum_joint_step_after_endpoint_pinning": 0.015529690414128217, "maximum_joint_step_before_endpoint_pinning": 0.015529690414128217, "reverse_gate_pass": true, "segment_type": "descent", "selected_direction": "reverse", "selected_gate_pass": true, "stroke_index": 2}
+{"endpoint_end_exact": true, "endpoint_start_exact": true, "forward_gate_pass": true, "maximum_joint_step_after_endpoint_pinning": 0.016229399974546976, "maximum_joint_step_before_endpoint_pinning": 0.016229399974546976, "reverse_gate_pass": true, "segment_type": "final_lift", "selected_direction": "forward", "selected_gate_pass": true, "stroke_index": 2}

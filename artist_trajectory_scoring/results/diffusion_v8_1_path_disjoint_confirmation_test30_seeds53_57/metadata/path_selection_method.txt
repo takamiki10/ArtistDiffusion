@@ -1,0 +1,17 @@
+Population: adaptive_mlp_ik_bootstrap_prior/test_prior.npz
+Physical identity: (split=test, path_name)
+Available test paths: 83
+Successful-prior paths: 83
+Failed-prior paths: 0
+Selected count: 30
+
+Selection method:
+1. Keep only generation_success=True paths.
+2. Sort successful path_names lexicographically.
+3. Select 30 systematic positions spanning the full sorted list.
+4. Freeze the selection before evaluating v8.1.
+
+No path may be removed or replaced after results are inspected.
+
+Failed prior paths:
+

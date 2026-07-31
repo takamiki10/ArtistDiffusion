@@ -1,0 +1,14 @@
+Diffusion v8.1 deployment trajectory generator
+verdict: V8_1_DEPLOYMENT_TRAJECTORY_ACCEPTED
+deployment_path_id: deployment__touch_20260122_stroke_03_branch_continuous_full_pose__5035e400
+input_path_name: touch_20260122_stroke_03_branch_continuous_full_pose
+sampling_seed: 53
+rejection_reasons: []
+maximum_prior_orientation_error_rad: 0.000020555
+maximum_final_orientation_error_rad: 0.000020555
+maximum_orientation_error_gate_rad: 0.050000000
+target_z: 0.324000000 m
+maximum_prior_z_error_m: 0.000032707
+maximum_final_z_error_m: 0.000032707
+maximum_z_error_gate_m: 0.001000000
+Robot-aware score, Cartesian error delta, accepted-step rate, and fallback rate are reported but not independent rejection gates.

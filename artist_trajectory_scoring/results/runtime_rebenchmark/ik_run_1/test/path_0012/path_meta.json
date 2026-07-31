@@ -1,0 +1,17 @@
+{
+  "parameters": {
+    "amplitude": 0.0724863384814419,
+    "center": [
+      -0.1207660454341613,
+      0.10385594401881489
+    ],
+    "length": 0.5379838798707212,
+    "rotation": 1.9074206679333703,
+    "z": 1.1821218729019165,
+    "zigzag_count": 6
+  },
+  "path_id": "path_0012",
+  "path_type": "zigzag",
+  "split": "test",
+  "timesteps": 100
+}

@@ -31,7 +31,14 @@ import evaluate_diffusion_v7_teacher_forced_validation as v7_evaluator
 import evaluate_diffusion_v8_1_anchored_recursive_jerk_guard as v81
 import evaluate_diffusion_v8_anchored_recursive_rollout as v8
 import generate_diffusion_v7_cost_improving_residual_targets as target_generator
+import orientation_aware_adaptive_ik as orientation_ik  # pyright: ignore[reportMissingImports]
 from generate_ik_seed_path import DEFAULT_URDF_PATH
+from orientation_aware_adaptive_ik import (  # pyright: ignore[reportMissingImports]
+    orientation_error_trajectory,
+    rotation_matrix_from_quaternion,
+    target_orientation_from_rpy,
+    trajectory_full_transform_fk,
+)
 
 
 TRAJECTORY_LENGTH = 100
@@ -47,6 +54,8 @@ FROZEN_EXECUTION_HORIZON = 8
 FROZEN_ANCHORING_HORIZON = 8
 FROZEN_CHECKPOINT_STATE = "raw_last_epoch187"
 MAXIMUM_INTERNAL_JOINT_STEP_RAD = 0.20
+MAXIMUM_ALLOWED_ORIENTATION_ERROR_GATE_RAD = 0.05
+MAXIMUM_ALLOWED_Z_ERROR_GATE_M = 0.001
 FK_RTOL = 1.0e-5
 FK_ATOL = 2.0e-5
 REQUIRED_SAFETY_METRICS = (
@@ -69,9 +78,21 @@ class DeploymentInput:
     input_path_name: str
     source_method: str
     source_checkpoint: str
+    source_checkpoint_sha256: str
     source_description: str
     input_sha256: str
     deployment_path_id: str
+    target_rpy: np.ndarray
+    target_quaternion: np.ndarray
+    target_rotation_matrix: np.ndarray
+    strong_prior_quaternion: np.ndarray
+    strong_prior_orientation_error_rad: np.ndarray
+    maximum_orientation_error_gate_rad: float
+    orientation_fk_frame: str
+    target_z: float
+    maximum_z_error_gate_m: float
+    strong_prior_z_error_m: np.ndarray
+    z_fk_frame: str
 
 
 def parse_args() -> argparse.Namespace:
@@ -236,6 +257,30 @@ def compute_fk(robot: target_generator.RobotContext, q: np.ndarray) -> np.ndarra
     return v8.compute_fk_positions(robot, np.asarray(q, dtype=np.float64))
 
 
+def compute_full_transform_fk(
+    robot: target_generator.RobotContext,
+    q: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    return trajectory_full_transform_fk(
+        robot.robot,
+        np.asarray(q, dtype=np.float64),
+        robot.joint_names,
+        robot.ee_link,
+    )
+
+
+def scalar_bool(data: Mapping[str, Any], key: str) -> bool:
+    if key not in data:
+        raise KeyError(f"Required input metadata is missing: {key}")
+    value = np.asarray(data[key])
+    if value.size != 1:
+        raise ValueError(f"{key} must be a scalar boolean")
+    item = value.reshape(-1)[0]
+    if not isinstance(item, (bool, np.bool_)):
+        raise ValueError(f"{key} must be stored as a boolean")
+    return bool(item)
+
+
 def load_input(args: argparse.Namespace, robot: target_generator.RobotContext) -> DeploymentInput:
     input_sha = sha256_file(args.input_npz)
     with np.load(args.input_npz, allow_pickle=False) as data:
@@ -247,7 +292,157 @@ def load_input(args: argparse.Namespace, robot: target_generator.RobotContext) -
         strong_prior_q = finite_array(
             "strong_prior_q", data["strong_prior_q"], (TRAJECTORY_LENGTH, JOINT_DIM)
         )
-        authoritative_prior_ee = compute_fk(robot, strong_prior_q)
+        required_orientation_fields = (
+            "target_rpy",
+            "target_quaternion",
+            "target_rotation_matrix",
+            "strong_prior_quaternion",
+            "strong_prior_orientation_error_rad",
+            "mean_orientation_error_rad",
+            "maximum_orientation_error_rad",
+            "maximum_orientation_error_gate_rad",
+            "orientation_constraint_enforced",
+            "orientation_fk_frame",
+        )
+        missing_orientation = [
+            key for key in required_orientation_fields if key not in data
+        ]
+        if missing_orientation:
+            raise KeyError(
+                "Deployment input lacks required orientation-enforcement "
+                f"fields: {missing_orientation}"
+            )
+        if not scalar_bool(data, "orientation_constraint_enforced"):
+            raise ValueError(
+                "orientation_constraint_enforced must be boolean True"
+            )
+        orientation_fk_frame = scalar_text(
+            data,
+            "orientation_fk_frame",
+        )
+        if (
+            orientation_fk_frame != "xMateCR7_link6"
+            or orientation_fk_frame != robot.ee_link
+        ):
+            raise ValueError(
+                "orientation_fk_frame must match authoritative "
+                "xMateCR7_link6"
+            )
+        target_rpy = finite_array("target_rpy", data["target_rpy"], (3,))
+        target_quaternion = finite_array(
+            "target_quaternion",
+            data["target_quaternion"],
+            (4,),
+        )
+        target_rotation_matrix = finite_array(
+            "target_rotation_matrix",
+            data["target_rotation_matrix"],
+            (3, 3),
+        )
+        rpy_quaternion, rpy_rotation = target_orientation_from_rpy(
+            float(target_rpy[0]),
+            float(target_rpy[1]),
+            float(target_rpy[2]),
+        )
+        quaternion_rotation = rotation_matrix_from_quaternion(
+            target_quaternion
+        )
+        if not np.allclose(
+            target_rotation_matrix,
+            rpy_rotation,
+            rtol=0.0,
+            atol=1.0e-10,
+        ):
+            raise ValueError(
+                "target_rotation_matrix does not match target_rpy"
+            )
+        if not np.allclose(
+            target_rotation_matrix,
+            quaternion_rotation,
+            rtol=0.0,
+            atol=1.0e-10,
+        ):
+            raise ValueError(
+                "target_rotation_matrix does not match target_quaternion"
+            )
+        if not np.allclose(
+            target_quaternion,
+            rpy_quaternion,
+            rtol=0.0,
+            atol=1.0e-10,
+        ):
+            raise ValueError(
+                "target_quaternion does not use the recorded target_rpy "
+                "XYZW convention"
+            )
+        maximum_orientation_error_gate_rad = float(
+            np.asarray(
+                data["maximum_orientation_error_gate_rad"]
+            ).item()
+        )
+        if (
+            not np.isfinite(maximum_orientation_error_gate_rad)
+            or maximum_orientation_error_gate_rad <= 0.0
+            or maximum_orientation_error_gate_rad
+            > MAXIMUM_ALLOWED_ORIENTATION_ERROR_GATE_RAD
+        ):
+            raise ValueError(
+                "maximum_orientation_error_gate_rad must be positive and may "
+                "not weaken the deployment orientation gate beyond "
+                f"{MAXIMUM_ALLOWED_ORIENTATION_ERROR_GATE_RAD:.6f} rad"
+            )
+        required_z_fields = (
+            "target_z",
+            "maximum_z_error_gate_m",
+            "strong_prior_z_error_m",
+            "mean_strong_prior_z_error_m",
+            "maximum_strong_prior_z_error_m",
+            "z_constraint_enforced",
+            "z_fk_frame",
+        )
+        missing_z = [key for key in required_z_fields if key not in data]
+        if missing_z:
+            raise KeyError(
+                "Deployment input lacks required fixed-Z enforcement fields: "
+                f"{missing_z}"
+            )
+        if not scalar_bool(data, "z_constraint_enforced"):
+            raise ValueError("z_constraint_enforced must be boolean True")
+        z_fk_frame = scalar_text(data, "z_fk_frame")
+        if z_fk_frame != "xMateCR7_link6" or z_fk_frame != robot.ee_link:
+            raise ValueError(
+                "z_fk_frame must match authoritative xMateCR7_link6"
+            )
+        target_z = float(np.asarray(data["target_z"]).item())
+        maximum_z_error_gate_m = float(
+            np.asarray(data["maximum_z_error_gate_m"]).item()
+        )
+        if not np.isfinite(target_z):
+            raise ValueError("target_z must be finite")
+        if (
+            not np.isfinite(maximum_z_error_gate_m)
+            or maximum_z_error_gate_m <= 0.0
+            or maximum_z_error_gate_m > MAXIMUM_ALLOWED_Z_ERROR_GATE_M
+        ):
+            raise ValueError(
+                "maximum_z_error_gate_m must be positive and may not weaken "
+                "the fixed-Z deployment gate beyond "
+                f"{MAXIMUM_ALLOWED_Z_ERROR_GATE_M:.6f} m"
+            )
+        if not np.allclose(
+            desired_path[:, 2],
+            target_z,
+            rtol=0.0,
+            atol=1.0e-12,
+        ):
+            raise ValueError(
+                "desired_path Z must be constant and match recorded target_z"
+            )
+        (
+            authoritative_prior_ee,
+            authoritative_prior_rotations,
+            authoritative_prior_quaternion,
+        ) = compute_full_transform_fk(robot, strong_prior_q)
         if "strong_prior_ee" in data:
             supplied_prior_ee = finite_array(
                 "strong_prior_ee",
@@ -258,6 +453,126 @@ def load_input(args: argparse.Namespace, robot: target_generator.RobotContext) -
                 supplied_prior_ee, authoritative_prior_ee, rtol=FK_RTOL, atol=FK_ATOL
             ):
                 raise ValueError("strong_prior_ee does not match authoritative FK")
+        supplied_prior_quaternion = finite_array(
+            "strong_prior_quaternion",
+            data["strong_prior_quaternion"],
+            (TRAJECTORY_LENGTH, 4),
+        )
+        if not np.allclose(
+            supplied_prior_quaternion,
+            authoritative_prior_quaternion,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "strong_prior_quaternion does not match authoritative "
+                "full-transform FK"
+            )
+        authoritative_prior_orientation_error = (
+            orientation_error_trajectory(
+                target_rotation_matrix,
+                authoritative_prior_rotations,
+            )
+        )
+        supplied_prior_orientation_error = finite_array(
+            "strong_prior_orientation_error_rad",
+            data["strong_prior_orientation_error_rad"],
+            (TRAJECTORY_LENGTH,),
+        )
+        if not np.allclose(
+            supplied_prior_orientation_error,
+            authoritative_prior_orientation_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "strong_prior_orientation_error_rad does not match "
+                "authoritative full-transform FK"
+            )
+        authoritative_mean_orientation_error = float(
+            np.mean(authoritative_prior_orientation_error)
+        )
+        authoritative_maximum_orientation_error = float(
+            np.max(authoritative_prior_orientation_error)
+        )
+        if not np.isclose(
+            float(np.asarray(data["mean_orientation_error_rad"]).item()),
+            authoritative_mean_orientation_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "mean_orientation_error_rad does not match prior FK"
+            )
+        if not np.isclose(
+            float(np.asarray(data["maximum_orientation_error_rad"]).item()),
+            authoritative_maximum_orientation_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "maximum_orientation_error_rad does not match prior FK"
+            )
+        if (
+            authoritative_maximum_orientation_error
+            > maximum_orientation_error_gate_rad
+        ):
+            raise ValueError(
+                "Strong prior maximum orientation error exceeds its "
+                "recorded acceptance gate"
+            )
+        authoritative_prior_z_error = np.abs(
+            authoritative_prior_ee[:, 2] - target_z
+        )
+        supplied_prior_z_error = finite_array(
+            "strong_prior_z_error_m",
+            data["strong_prior_z_error_m"],
+            (TRAJECTORY_LENGTH,),
+        )
+        if not np.allclose(
+            supplied_prior_z_error,
+            authoritative_prior_z_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "strong_prior_z_error_m does not match authoritative FK"
+            )
+        authoritative_mean_prior_z_error = float(
+            np.mean(authoritative_prior_z_error)
+        )
+        authoritative_maximum_prior_z_error = float(
+            np.max(authoritative_prior_z_error)
+        )
+        if not np.isclose(
+            float(
+                np.asarray(data["mean_strong_prior_z_error_m"]).item()
+            ),
+            authoritative_mean_prior_z_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "mean_strong_prior_z_error_m does not match prior FK"
+            )
+        if not np.isclose(
+            float(
+                np.asarray(
+                    data["maximum_strong_prior_z_error_m"]
+                ).item()
+            ),
+            authoritative_maximum_prior_z_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "maximum_strong_prior_z_error_m does not match prior FK"
+            )
+        if authoritative_maximum_prior_z_error > maximum_z_error_gate_m:
+            raise ValueError(
+                "Strong prior maximum Z error exceeds its recorded "
+                "acceptance gate"
+            )
         if "timestamps" in data:
             timestamps = finite_array("timestamps", data["timestamps"], (TRAJECTORY_LENGTH,))
         else:
@@ -272,9 +587,32 @@ def load_input(args: argparse.Namespace, robot: target_generator.RobotContext) -
         path_name = scalar_text(data, "path_name", args.input_npz.stem)
         source_method = scalar_text(data, "source_method", "")
         source_checkpoint = scalar_text(data, "source_checkpoint", "")
+        source_checkpoint_sha256 = scalar_text(
+            data,
+            "source_checkpoint_sha256",
+            "",
+        )
+        if re.fullmatch(
+            r"[0-9a-f]{64}",
+            source_checkpoint_sha256,
+        ) is None:
+            raise ValueError(
+                "source_checkpoint_sha256 must be a lowercase 64-character "
+                "SHA-256 hexadecimal digest"
+            )
         source_description = scalar_text(data, "source_description", "")
     base_id = sanitize_identifier(args.path_id or path_name)
-    path_hash = sha256_arrays(desired_path, strong_prior_q)[:8]
+    path_hash = sha256_arrays(
+        desired_path,
+        strong_prior_q,
+        target_rpy,
+        np.asarray(target_z, dtype=np.float64),
+        np.asarray(
+            maximum_orientation_error_gate_rad,
+            dtype=np.float64,
+        ),
+        np.asarray(maximum_z_error_gate_m, dtype=np.float64),
+    )[:8]
     deployment_path_id = f"deployment__{base_id}__{path_hash}"
     return DeploymentInput(
         desired_path=desired_path,
@@ -284,9 +622,25 @@ def load_input(args: argparse.Namespace, robot: target_generator.RobotContext) -
         input_path_name=path_name,
         source_method=source_method,
         source_checkpoint=source_checkpoint,
+        source_checkpoint_sha256=source_checkpoint_sha256,
         source_description=source_description,
         input_sha256=input_sha,
         deployment_path_id=deployment_path_id,
+        target_rpy=target_rpy,
+        target_quaternion=target_quaternion,
+        target_rotation_matrix=target_rotation_matrix,
+        strong_prior_quaternion=authoritative_prior_quaternion,
+        strong_prior_orientation_error_rad=(
+            authoritative_prior_orientation_error
+        ),
+        maximum_orientation_error_gate_rad=(
+            maximum_orientation_error_gate_rad
+        ),
+        orientation_fk_frame=orientation_fk_frame,
+        target_z=target_z,
+        maximum_z_error_gate_m=maximum_z_error_gate_m,
+        strong_prior_z_error_m=authoritative_prior_z_error,
+        z_fk_frame=z_fk_frame,
     )
 
 
@@ -778,7 +1132,37 @@ def main() -> int:
         path_name=data.input_path_name,
         source_method=data.source_method,
         source_checkpoint=data.source_checkpoint,
+        source_checkpoint_sha256=data.source_checkpoint_sha256,
         source_description=data.source_description,
+        target_rpy=data.target_rpy,
+        target_quaternion=data.target_quaternion,
+        target_rotation_matrix=data.target_rotation_matrix,
+        strong_prior_quaternion=data.strong_prior_quaternion,
+        strong_prior_orientation_error_rad=(
+            data.strong_prior_orientation_error_rad
+        ),
+        mean_orientation_error_rad=float(
+            np.mean(data.strong_prior_orientation_error_rad)
+        ),
+        maximum_orientation_error_rad=float(
+            np.max(data.strong_prior_orientation_error_rad)
+        ),
+        maximum_orientation_error_gate_rad=(
+            data.maximum_orientation_error_gate_rad
+        ),
+        orientation_constraint_enforced=True,
+        orientation_fk_frame=data.orientation_fk_frame,
+        target_z=data.target_z,
+        maximum_z_error_gate_m=data.maximum_z_error_gate_m,
+        strong_prior_z_error_m=data.strong_prior_z_error_m,
+        mean_prior_z_error_m=float(
+            np.mean(data.strong_prior_z_error_m)
+        ),
+        maximum_prior_z_error_m=float(
+            np.max(data.strong_prior_z_error_m)
+        ),
+        z_constraint_enforced=True,
+        z_fk_frame=data.z_fk_frame,
         input_sha256=data.input_sha256,
         deployment_path_id=data.deployment_path_id,
         urdf_path=str(resolved_urdf),
@@ -841,8 +1225,165 @@ def main() -> int:
     velocity, acceleration, jerk = dynamics(result.rollout_q, data.timestamps)
     manipulability, min_singular = manipulability_diagnostics(robot, result.rollout_q)
     cartesian_error = np.linalg.norm(result.rollout_ee - data.desired_path, axis=1)
+    (
+        independently_recomputed_prior_position,
+        independently_recomputed_prior_rotation,
+        independently_recomputed_prior_quaternion,
+    ) = compute_full_transform_fk(robot, data.strong_prior_q)
+    (
+        independently_recomputed_final_position,
+        independently_recomputed_final_rotation,
+        final_quaternion,
+    ) = compute_full_transform_fk(robot, result.rollout_q)
+    if not np.allclose(
+        independently_recomputed_prior_position,
+        data.strong_prior_ee,
+        rtol=FK_RTOL,
+        atol=FK_ATOL,
+    ):
+        raise AssertionError(
+            "Strong-prior full-transform FK position differs from input"
+        )
+    if not np.allclose(
+        independently_recomputed_prior_quaternion,
+        data.strong_prior_quaternion,
+        rtol=1.0e-7,
+        atol=1.0e-9,
+    ):
+        raise AssertionError(
+            "Strong-prior quaternion differs from independent full-transform FK"
+        )
+    if not np.allclose(
+        independently_recomputed_final_position,
+        result.rollout_ee,
+        rtol=FK_RTOL,
+        atol=FK_ATOL,
+    ):
+        raise AssertionError(
+            "Final full-transform FK position differs from frozen rollout FK"
+        )
+    prior_orientation_error = orientation_error_trajectory(
+        data.target_rotation_matrix,
+        independently_recomputed_prior_rotation,
+    )
+    final_orientation_error = orientation_error_trajectory(
+        data.target_rotation_matrix,
+        independently_recomputed_final_rotation,
+    )
+    prior_z_error = np.abs(
+        independently_recomputed_prior_position[:, 2] - data.target_z
+    )
+    final_z_error = np.abs(
+        independently_recomputed_final_position[:, 2] - data.target_z
+    )
+    if not np.allclose(
+        prior_z_error,
+        data.strong_prior_z_error_m,
+        rtol=1.0e-7,
+        atol=1.0e-9,
+    ):
+        raise AssertionError(
+            "Strong-prior Z error differs from independent full-transform FK"
+        )
+    if not np.allclose(
+        prior_orientation_error,
+        data.strong_prior_orientation_error_rad,
+        rtol=1.0e-7,
+        atol=1.0e-9,
+    ):
+        raise AssertionError(
+            "Strong-prior orientation error differs from independent "
+            "full-transform FK"
+        )
+    mean_prior_orientation_error = float(
+        np.mean(prior_orientation_error)
+    )
+    maximum_prior_orientation_error = float(
+        np.max(prior_orientation_error)
+    )
+    mean_final_orientation_error = float(
+        np.mean(final_orientation_error)
+    )
+    maximum_final_orientation_error = float(
+        np.max(final_orientation_error)
+    )
+    mean_prior_z_error = float(np.mean(prior_z_error))
+    maximum_prior_z_error = float(np.max(prior_z_error))
+    mean_final_z_error = float(np.mean(final_z_error))
+    maximum_final_z_error = float(np.max(final_z_error))
     safe, rejection_reasons, independent_safety = final_safety_checks(
         result, recomputed_metrics, data.timestamps, robot
+    )
+    finite_orientation = bool(
+        np.all(np.isfinite(data.target_rpy))
+        and np.all(np.isfinite(data.target_quaternion))
+        and np.all(np.isfinite(data.target_rotation_matrix))
+        and np.all(np.isfinite(independently_recomputed_prior_rotation))
+        and np.all(np.isfinite(independently_recomputed_prior_quaternion))
+        and np.all(np.isfinite(prior_orientation_error))
+        and np.all(np.isfinite(independently_recomputed_final_rotation))
+        and np.all(np.isfinite(final_quaternion))
+        and np.all(np.isfinite(final_orientation_error))
+    )
+    prior_orientation_pass = bool(
+        finite_orientation
+        and maximum_prior_orientation_error
+        <= data.maximum_orientation_error_gate_rad
+    )
+    final_orientation_pass = bool(
+        finite_orientation
+        and maximum_final_orientation_error
+        <= data.maximum_orientation_error_gate_rad
+    )
+    finite_z = bool(
+        np.isfinite(data.target_z)
+        and np.all(np.isfinite(prior_z_error))
+        and np.all(np.isfinite(final_z_error))
+    )
+    prior_z_pass = bool(
+        finite_z
+        and maximum_prior_z_error <= data.maximum_z_error_gate_m
+    )
+    final_z_pass = bool(
+        finite_z
+        and maximum_final_z_error <= data.maximum_z_error_gate_m
+    )
+    if not finite_orientation:
+        rejection_reasons.append("nonfinite_orientation_fk")
+    if not prior_orientation_pass:
+        rejection_reasons.append("strong_prior_orientation_gate")
+    if not final_orientation_pass:
+        rejection_reasons.append("final_orientation_gate")
+    if not finite_z:
+        rejection_reasons.append("nonfinite_z_fk")
+    if not prior_z_pass:
+        rejection_reasons.append("strong_prior_z_gate")
+    if not final_z_pass:
+        rejection_reasons.append("final_z_gate")
+    independent_safety.update(
+        {
+            "independent_finite_orientation_pass": int(
+                finite_orientation
+            ),
+            "independent_prior_orientation_pass": int(
+                prior_orientation_pass
+            ),
+            "independent_final_orientation_pass": int(
+                final_orientation_pass
+            ),
+            "independent_finite_z_pass": int(finite_z),
+            "independent_prior_z_pass": int(prior_z_pass),
+            "independent_final_z_pass": int(final_z_pass),
+        }
+    )
+    safe = bool(
+        safe
+        and finite_orientation
+        and prior_orientation_pass
+        and final_orientation_pass
+        and finite_z
+        and prior_z_pass
+        and final_z_pass
     )
     verdict = (
         "V8_1_DEPLOYMENT_TRAJECTORY_ACCEPTED"
@@ -920,9 +1461,49 @@ def main() -> int:
         "history_aware_jerk_tolerance": v81.HISTORY_AWARE_JERK_TOLERANCE,
         "source_method": data.source_method,
         "source_checkpoint": data.source_checkpoint,
+        "source_checkpoint_sha256": data.source_checkpoint_sha256,
         "source_description": data.source_description,
+        "target_rpy": data.target_rpy,
+        "target_quaternion": data.target_quaternion,
+        "target_rotation_matrix": data.target_rotation_matrix,
+        "strong_prior_quaternion": (
+            independently_recomputed_prior_quaternion
+        ),
+        "final_quaternion": final_quaternion,
+        "strong_prior_orientation_error_rad": prior_orientation_error,
+        "final_orientation_error_rad": final_orientation_error,
+        "mean_prior_orientation_error_rad": (
+            mean_prior_orientation_error
+        ),
+        "maximum_prior_orientation_error_rad": (
+            maximum_prior_orientation_error
+        ),
+        "mean_final_orientation_error_rad": (
+            mean_final_orientation_error
+        ),
+        "maximum_final_orientation_error_rad": (
+            maximum_final_orientation_error
+        ),
+        "maximum_orientation_error_gate_rad": (
+            data.maximum_orientation_error_gate_rad
+        ),
+        "orientation_constraint_enforced": True,
+        "orientation_fk_frame": data.orientation_fk_frame,
+        "target_z": data.target_z,
+        "strong_prior_z_error_m": prior_z_error,
+        "final_z_error_m": final_z_error,
+        "mean_prior_z_error_m": mean_prior_z_error,
+        "maximum_prior_z_error_m": maximum_prior_z_error,
+        "mean_final_z_error_m": mean_final_z_error,
+        "maximum_final_z_error_m": maximum_final_z_error,
+        "maximum_z_error_gate_m": data.maximum_z_error_gate_m,
+        "z_constraint_enforced": True,
+        "z_fk_frame": data.z_fk_frame,
         "provenance": {
             "generator_script_sha256": sha256_file(Path(__file__).resolve()),
+            "orientation_helper_script_sha256": script_hash(
+                orientation_ik
+            ),
             "frozen_v8_1_script_sha256": script_hash(v81),
             "frozen_v8_script_sha256": script_hash(v8),
             "training_dataset_manifest_or_path": str(args.training_dataset_dir),
@@ -952,6 +1533,42 @@ def main() -> int:
         desired_path=data.desired_path,
         strong_prior_q=data.strong_prior_q,
         strong_prior_ee=data.strong_prior_ee,
+        target_rpy=data.target_rpy,
+        target_quaternion=data.target_quaternion,
+        target_rotation_matrix=data.target_rotation_matrix,
+        strong_prior_quaternion=(
+            independently_recomputed_prior_quaternion
+        ),
+        final_quaternion=final_quaternion,
+        strong_prior_orientation_error_rad=prior_orientation_error,
+        final_orientation_error_rad=final_orientation_error,
+        mean_prior_orientation_error_rad=(
+            mean_prior_orientation_error
+        ),
+        maximum_prior_orientation_error_rad=(
+            maximum_prior_orientation_error
+        ),
+        mean_final_orientation_error_rad=(
+            mean_final_orientation_error
+        ),
+        maximum_final_orientation_error_rad=(
+            maximum_final_orientation_error
+        ),
+        maximum_orientation_error_gate_rad=(
+            data.maximum_orientation_error_gate_rad
+        ),
+        orientation_constraint_enforced=True,
+        orientation_fk_frame=data.orientation_fk_frame,
+        target_z=data.target_z,
+        strong_prior_z_error_m=prior_z_error,
+        final_z_error_m=final_z_error,
+        mean_prior_z_error_m=mean_prior_z_error,
+        maximum_prior_z_error_m=maximum_prior_z_error,
+        mean_final_z_error_m=mean_final_z_error,
+        maximum_final_z_error_m=maximum_final_z_error,
+        maximum_z_error_gate_m=data.maximum_z_error_gate_m,
+        z_constraint_enforced=True,
+        z_fk_frame=data.z_fk_frame,
         final_q=result.rollout_q,
         final_ee=result.rollout_ee,
         joint_velocity=velocity,
@@ -971,6 +1588,7 @@ def main() -> int:
         input_path_name=data.input_path_name,
         input_file=str(args.input_npz),
         input_sha256=data.input_sha256,
+        source_checkpoint_sha256=data.source_checkpoint_sha256,
         urdf_path=str(resolved_urdf),
         urdf_sha256=urdf_sha256,
         model_dir=str(args.model_dir),
@@ -996,6 +1614,25 @@ def main() -> int:
         f"input_path_name: {data.input_path_name}",
         f"sampling_seed: {args.sampling_seed}",
         f"rejection_reasons: {rejection_reasons}",
+        (
+            "maximum_prior_orientation_error_rad: "
+            f"{maximum_prior_orientation_error:.9f}"
+        ),
+        (
+            "maximum_final_orientation_error_rad: "
+            f"{maximum_final_orientation_error:.9f}"
+        ),
+        (
+            "maximum_orientation_error_gate_rad: "
+            f"{data.maximum_orientation_error_gate_rad:.9f}"
+        ),
+        f"target_z: {data.target_z:.9f} m",
+        f"maximum_prior_z_error_m: {maximum_prior_z_error:.9f}",
+        f"maximum_final_z_error_m: {maximum_final_z_error:.9f}",
+        (
+            "maximum_z_error_gate_m: "
+            f"{data.maximum_z_error_gate_m:.9f}"
+        ),
         "Robot-aware score, Cartesian error delta, accepted-step rate, and fallback rate are reported but not independent rejection gates.",
     ]
     atomic_write_text(args.output_dir / "deployment_report.txt", "\n".join(report) + "\n")
@@ -1009,6 +1646,26 @@ def main() -> int:
             args.output_dir / "approved_simulation_trajectory.npz",
             timestamps=data.timestamps,
             q=result.rollout_q,
+            target_rpy=data.target_rpy,
+            target_quaternion=data.target_quaternion,
+            target_rotation_matrix=data.target_rotation_matrix,
+            final_quaternion=final_quaternion,
+            final_orientation_error_rad=final_orientation_error,
+            maximum_final_orientation_error_rad=(
+                maximum_final_orientation_error
+            ),
+            maximum_orientation_error_gate_rad=(
+                data.maximum_orientation_error_gate_rad
+            ),
+            orientation_constraint_enforced=True,
+            orientation_fk_frame=data.orientation_fk_frame,
+            target_z=data.target_z,
+            final_z_error_m=final_z_error,
+            mean_final_z_error_m=mean_final_z_error,
+            maximum_final_z_error_m=maximum_final_z_error,
+            maximum_z_error_gate_m=data.maximum_z_error_gate_m,
+            z_constraint_enforced=True,
+            z_fk_frame=data.z_fk_frame,
             deployment_path_id=data.deployment_path_id,
             verdict=verdict,
             urdf_path=str(resolved_urdf),

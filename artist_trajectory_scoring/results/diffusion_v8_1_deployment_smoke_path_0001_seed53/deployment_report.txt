@@ -1,0 +1,7 @@
+Diffusion v8.1 deployment trajectory generator
+verdict: V8_1_DEPLOYMENT_TRAJECTORY_ACCEPTED
+deployment_path_id: deployment__deployment_smoke_path_0001__79799f7b
+input_path_name: deployment_smoke_path_0001
+sampling_seed: 53
+rejection_reasons: []
+Robot-aware score, Cartesian error delta, accepted-step rate, and fallback rate are reported but not independent rejection gates.

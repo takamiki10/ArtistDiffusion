@@ -1,0 +1,11 @@
+dataset_build_summary.json	5469
+dataset_metadata.json	35094
+normalization_stats.npz	3973
+original_100path_evaluation_manifest.csv	1526
+path_split.csv	1989
+scale_distribution_by_split.csv	1242
+targets_per_window_summary.csv	94705
+train_rows.csv	1703346
+train_windows.npz	22543651
+validation_rows.csv	418529
+validation_windows.npz	5337676

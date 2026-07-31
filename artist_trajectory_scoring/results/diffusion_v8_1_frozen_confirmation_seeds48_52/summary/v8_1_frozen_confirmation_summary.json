@@ -1,0 +1,37 @@
+{
+  "classification": "V8_1_FROZEN_CONFIRMATION_PASS",
+  "confirmation_pass": true,
+  "criteria": {
+    "all_final_trajectories_safe": true,
+    "complete_confirmation_population": true,
+    "maximum_internal_step_within_0_20_rad": true,
+    "negative_mean_internal_score": true,
+    "nonpositive_mean_cartesian_delta": true,
+    "nonpositive_p95_internal_score": true
+  },
+  "metrics": {
+    "all_final_trajectories_safe": true,
+    "confirmation_seeds": [
+      48,
+      49,
+      50,
+      51,
+      52
+    ],
+    "final_safety_pass_rate": 1.0,
+    "fraction_path_seed_runs_internal_score_negative": 0.78,
+    "maximum_actual_internal_joint_step_rad": 0.1804524916105456,
+    "mean_accepted_rollout_step_rate": 0.15076923076923074,
+    "mean_cartesian_mean_error_delta_m": -1.485315015283478e-05,
+    "mean_fallback_rate": 0.8492307692307692,
+    "mean_internal_full_path_score": -0.05472350439224005,
+    "mean_internal_jerk_contribution": -0.010653669874762439,
+    "mean_jerk_rejection_rate_among_v8_selectable": 0.7434800905524821,
+    "median_internal_full_path_score": -0.038639804597693,
+    "p95_internal_full_path_score": 0.0,
+    "path_seed_count": 100,
+    "unique_physical_path_count": 20,
+    "worst_path_seed_internal_score": 0.0
+  },
+  "note": "Fresh stochastic confirmation using seeds 48-52. These results are not paired development comparisons."
+}

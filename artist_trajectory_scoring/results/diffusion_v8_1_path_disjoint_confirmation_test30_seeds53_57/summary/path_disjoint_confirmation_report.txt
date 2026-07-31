@@ -1,0 +1,17 @@
+Diffusion v8.1 path-disjoint confirmation summary
+classification: V8_1_PATH_DISJOINT_CONFIRMATION_PASS
+missing seeds: []
+{
+  "classification": "V8_1_PATH_DISJOINT_CONFIRMATION_PASS",
+  "correction_growth_slope_is_reported_not_gated": true,
+  "criteria": {
+    "all_final_trajectories_safe": true,
+    "complete_five_seed_30_path_population": true,
+    "maximum_actual_internal_joint_step_le_0_20_rad": true,
+    "mean_cartesian_delta_le_0": true,
+    "mean_internal_score_lt_0": true,
+    "p95_internal_score_le_0": true,
+    "worst_path_seed_internal_score_le_0": true
+  },
+  "pass": true
+}

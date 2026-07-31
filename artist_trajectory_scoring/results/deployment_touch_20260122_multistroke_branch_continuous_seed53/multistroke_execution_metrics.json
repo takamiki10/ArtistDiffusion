@@ -1,0 +1,208 @@
+{
+  "accepted": true,
+  "drawing_preservation": [
+    {
+      "combined_end_sample": 129,
+      "combined_start_sample": 30,
+      "exactly_once_and_ordered": true,
+      "source_directory": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/deployment_touch_20260122_stroke_01_full_pose_seed53",
+      "stroke_index": 0
+    },
+    {
+      "combined_end_sample": 308,
+      "combined_start_sample": 209,
+      "exactly_once_and_ordered": true,
+      "source_directory": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/deployment_touch_20260122_stroke_02_full_pose_seed53",
+      "stroke_index": 1
+    },
+    {
+      "combined_end_sample": 487,
+      "combined_start_sample": 388,
+      "exactly_once_and_ordered": true,
+      "source_directory": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/deployment_touch_20260122_stroke_03_branch_continuous_full_pose_seed53",
+      "stroke_index": 2
+    }
+  ],
+  "drawing_z": 0.324,
+  "fk_frame": "xMateCR7_link6",
+  "hard_joint_limit_violation_count": 0,
+  "hover_offset_z": 0.05,
+  "hover_z": 0.374,
+  "joint_order": [
+    "joint1",
+    "joint2",
+    "joint3",
+    "joint4",
+    "joint5",
+    "joint6"
+  ],
+  "legacy_drawing_stroke_ids": [
+    1,
+    2,
+    3
+  ],
+  "legacy_smartjoint_csv": "results/deployment_touch_20260122_multistroke_branch_continuous_seed53/SmartJoint_Data_diffusion.csv",
+  "legacy_smartjoint_row_count": 508,
+  "maximum_cartesian_error_m": 0.001,
+  "maximum_consecutive_absolute_joint_step_rad": 0.016708238656928054,
+  "maximum_joint_step_rad": 0.2,
+  "maximum_observed_cartesian_error_m": 9.488687701805205e-05,
+  "maximum_observed_orientation_error_rad": 2.6346997583249888e-05,
+  "maximum_observed_z_tracking_error_m": 9.304752469169175e-05,
+  "maximum_orientation_error_rad": 0.05,
+  "maximum_z_tracking_error_m": 0.001,
+  "operator_start_requirement": "The operator must move the robot to q[0], the solved initial hover state, before starting. No motion from an arbitrary physical robot state is planned.",
+  "rejection_reasons": [],
+  "sample_count": 508,
+  "segment_count": 12,
+  "source_stroke_deployment_path_id": [
+    "deployment__touch_20260122_stroke_01_full_pose__0319d3ac",
+    "deployment__touch_20260122_stroke_02_full_pose__e2edcaa6",
+    "deployment__touch_20260122_stroke_03_branch_continuous_full_pose__5035e400"
+  ],
+  "source_stroke_directories": [
+    "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/deployment_touch_20260122_stroke_01_full_pose_seed53",
+    "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/deployment_touch_20260122_stroke_02_full_pose_seed53",
+    "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/results/deployment_touch_20260122_stroke_03_branch_continuous_full_pose_seed53"
+  ],
+  "source_stroke_input_sha256": [
+    "ec283eb10d063051014902736bc80adc956319b57a37e2b2895d7652798236c7",
+    "1a5ccff3bc4eefb1d16257e9382f2d75f421807f431a3e6ec01ad4603b101ce0",
+    "ec01727d6a2f5fbbe13161aac12c209511cbec8b3076da1773d650ad05f518dc"
+  ],
+  "stroke_count": 3,
+  "target_quaternion": [
+    1.0,
+    0.0,
+    0.0,
+    6.123233995736766e-17
+  ],
+  "target_rotation_matrix": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      -1.0,
+      -1.2246467991473532e-16
+    ],
+    [
+      0.0,
+      1.2246467991473532e-16,
+      -1.0
+    ]
+  ],
+  "target_rpy": [
+    3.141592653589793,
+    0.0,
+    0.0
+  ],
+  "transition_diagnostics": [
+    {
+      "endpoint_end_exact": true,
+      "endpoint_start_exact": true,
+      "forward_gate_pass": true,
+      "maximum_joint_step_after_endpoint_pinning": 0.011288362446668532,
+      "maximum_joint_step_before_endpoint_pinning": 0.011288362446668532,
+      "reverse_gate_pass": true,
+      "segment_type": "initial_descent",
+      "selected_direction": "forward",
+      "selected_gate_pass": true,
+      "stroke_index": 0
+    },
+    {
+      "endpoint_end_exact": true,
+      "endpoint_start_exact": true,
+      "forward_gate_pass": true,
+      "maximum_joint_step_after_endpoint_pinning": 0.01505631210438263,
+      "maximum_joint_step_before_endpoint_pinning": 0.01505631210438263,
+      "reverse_gate_pass": true,
+      "segment_type": "lift",
+      "selected_direction": "forward",
+      "selected_gate_pass": true,
+      "stroke_index": 0
+    },
+    {
+      "coupled_hover_candidate": "preliminary_hover_travel_final_state_seed",
+      "endpoint_end_exact": true,
+      "endpoint_start_exact": true,
+      "forward_gate_pass": true,
+      "maximum_joint_step_after_endpoint_pinning": 0.0027762348737918607,
+      "maximum_joint_step_before_endpoint_pinning": 0.0027762348737918607,
+      "reverse_gate_pass": true,
+      "segment_type": "hover_travel",
+      "selected_direction": "reverse",
+      "selected_gate_pass": true,
+      "stroke_index": 1
+    },
+    {
+      "coupled_hover_candidate": "preliminary_hover_travel_final_state_seed",
+      "endpoint_end_exact": true,
+      "endpoint_start_exact": true,
+      "forward_gate_pass": true,
+      "maximum_joint_step_after_endpoint_pinning": 0.015765509387377752,
+      "maximum_joint_step_before_endpoint_pinning": 0.015765509387377752,
+      "reverse_gate_pass": true,
+      "segment_type": "descent",
+      "selected_direction": "reverse",
+      "selected_gate_pass": true,
+      "stroke_index": 1
+    },
+    {
+      "endpoint_end_exact": true,
+      "endpoint_start_exact": true,
+      "forward_gate_pass": true,
+      "maximum_joint_step_after_endpoint_pinning": 0.016708238656928054,
+      "maximum_joint_step_before_endpoint_pinning": 0.016708238656928054,
+      "reverse_gate_pass": true,
+      "segment_type": "lift",
+      "selected_direction": "reverse",
+      "selected_gate_pass": true,
+      "stroke_index": 1
+    },
+    {
+      "coupled_hover_candidate": "preliminary_hover_travel_final_state_seed",
+      "endpoint_end_exact": true,
+      "endpoint_start_exact": true,
+      "forward_gate_pass": true,
+      "maximum_joint_step_after_endpoint_pinning": 0.0033808531649035523,
+      "maximum_joint_step_before_endpoint_pinning": 0.0033808531649035523,
+      "reverse_gate_pass": true,
+      "segment_type": "hover_travel",
+      "selected_direction": "forward",
+      "selected_gate_pass": true,
+      "stroke_index": 2
+    },
+    {
+      "coupled_hover_candidate": "preliminary_hover_travel_final_state_seed",
+      "endpoint_end_exact": true,
+      "endpoint_start_exact": true,
+      "forward_gate_pass": true,
+      "maximum_joint_step_after_endpoint_pinning": 0.015529690414128217,
+      "maximum_joint_step_before_endpoint_pinning": 0.015529690414128217,
+      "reverse_gate_pass": true,
+      "segment_type": "descent",
+      "selected_direction": "reverse",
+      "selected_gate_pass": true,
+      "stroke_index": 2
+    },
+    {
+      "endpoint_end_exact": true,
+      "endpoint_start_exact": true,
+      "forward_gate_pass": true,
+      "maximum_joint_step_after_endpoint_pinning": 0.016229399974546976,
+      "maximum_joint_step_before_endpoint_pinning": 0.016229399974546976,
+      "reverse_gate_pass": true,
+      "segment_type": "final_lift",
+      "selected_direction": "forward",
+      "selected_gate_pass": true,
+      "stroke_index": 2
+    }
+  ],
+  "transition_sample_period": 0.05,
+  "urdf_path": "/mnt/ssd/artistDiffusion/ArtistDiffusion/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/gazebo_xMateCR7.urdf",
+  "urdf_sha256": "921e6ae2402ccbf8112ece1b88776c22c841d6e6a04519c3e6b903d2c1bd427a",
+  "verdict": "MULTISTROKE_EXECUTION_ACCEPTED"
+}

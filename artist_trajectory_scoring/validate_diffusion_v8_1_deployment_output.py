@@ -19,11 +19,20 @@ import numpy as np
 import evaluate_diffusion_v8_1_anchored_recursive_jerk_guard as v81
 import evaluate_diffusion_v8_anchored_recursive_rollout as v8
 import evaluate_diffusion_v7_teacher_forced_validation as v7_evaluator
+import orientation_aware_adaptive_ik as orientation_ik  # pyright: ignore[reportMissingImports]
+from orientation_aware_adaptive_ik import (  # pyright: ignore[reportMissingImports]
+    orientation_error_trajectory,
+    rotation_matrix_from_quaternion,
+    target_orientation_from_rpy,
+    trajectory_full_transform_fk,
+)
 
 
 TRAJECTORY_LENGTH = 100
 JOINT_DIM = 6
 XYZ_DIM = 3
+MAXIMUM_ALLOWED_ORIENTATION_ERROR_GATE_RAD = 0.05
+MAXIMUM_ALLOWED_Z_ERROR_GATE_M = 0.001
 FROZEN = {
     "checkpoint_state": "raw_last_epoch187",
     "target_scale": 1.0,
@@ -108,6 +117,139 @@ def finite_array(name: str, array: np.ndarray, shape: Sequence[int]) -> np.ndarr
     if not np.all(np.isfinite(values)):
         raise ValueError(f"{name} contains nonfinite values")
     return values
+
+
+def scalar_boolean(name: str, value: Any) -> bool:
+    array = np.asarray(value)
+    if array.size != 1:
+        raise ValueError(f"{name} must be a scalar boolean")
+    item = array.reshape(-1)[0]
+    if not isinstance(item, (bool, np.bool_)):
+        raise ValueError(f"{name} must be stored as a boolean")
+    return bool(item)
+
+
+def full_transform_fk(
+    robot: Any,
+    q: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    return trajectory_full_transform_fk(
+        robot.robot,
+        np.asarray(q, dtype=np.float64),
+        robot.joint_names,
+        robot.ee_link,
+    )
+
+
+def validate_target_orientation(
+    source: Mapping[str, Any],
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float, str]:
+    target_rpy = finite_array("target_rpy", source["target_rpy"], (3,))
+    target_quaternion = finite_array(
+        "target_quaternion",
+        source["target_quaternion"],
+        (4,),
+    )
+    target_rotation = finite_array(
+        "target_rotation_matrix",
+        source["target_rotation_matrix"],
+        (3, 3),
+    )
+    if not scalar_boolean(
+        "orientation_constraint_enforced",
+        source["orientation_constraint_enforced"],
+    ):
+        raise ValueError("orientation_constraint_enforced must be True")
+    orientation_fk_frame = string_value(source["orientation_fk_frame"])
+    if orientation_fk_frame != "xMateCR7_link6":
+        raise ValueError(
+            "orientation_fk_frame must be xMateCR7_link6"
+        )
+    gate = number(
+        np.asarray(source["maximum_orientation_error_gate_rad"]).item()
+    )
+    if (
+        not np.isfinite(gate)
+        or gate <= 0.0
+        or gate > MAXIMUM_ALLOWED_ORIENTATION_ERROR_GATE_RAD
+    ):
+        raise ValueError(
+            "maximum_orientation_error_gate_rad must be positive and may not "
+            "weaken the deployment orientation gate beyond "
+            f"{MAXIMUM_ALLOWED_ORIENTATION_ERROR_GATE_RAD:.6f} rad"
+        )
+    rpy_quaternion, rpy_rotation = target_orientation_from_rpy(
+        float(target_rpy[0]),
+        float(target_rpy[1]),
+        float(target_rpy[2]),
+    )
+    quaternion_rotation = rotation_matrix_from_quaternion(
+        target_quaternion
+    )
+    if not np.allclose(
+        target_rotation,
+        rpy_rotation,
+        rtol=0.0,
+        atol=1.0e-10,
+    ):
+        raise ValueError(
+            "target_rotation_matrix does not match target_rpy"
+        )
+    if not np.allclose(
+        target_rotation,
+        quaternion_rotation,
+        rtol=0.0,
+        atol=1.0e-10,
+    ):
+        raise ValueError(
+            "target_rotation_matrix does not match target_quaternion"
+        )
+    if not np.allclose(
+        target_quaternion,
+        rpy_quaternion,
+        rtol=0.0,
+        atol=1.0e-10,
+    ):
+        raise ValueError(
+            "target_quaternion does not match target_rpy in XYZW order"
+        )
+    return (
+        target_rpy,
+        target_quaternion,
+        target_rotation,
+        gate,
+        orientation_fk_frame,
+    )
+
+
+def validate_z_contract(
+    source: Mapping[str, Any],
+) -> Tuple[float, float, str]:
+    target_z = number(np.asarray(source["target_z"]).item())
+    gate = number(
+        np.asarray(source["maximum_z_error_gate_m"]).item()
+    )
+    if not np.isfinite(target_z):
+        raise ValueError("target_z must be finite")
+    if (
+        not np.isfinite(gate)
+        or gate <= 0.0
+        or gate > MAXIMUM_ALLOWED_Z_ERROR_GATE_M
+    ):
+        raise ValueError(
+            "maximum_z_error_gate_m must be positive and may not weaken "
+            "the fixed-Z deployment gate beyond "
+            f"{MAXIMUM_ALLOWED_Z_ERROR_GATE_M:.6f} m"
+        )
+    if not scalar_boolean(
+        "z_constraint_enforced",
+        source["z_constraint_enforced"],
+    ):
+        raise ValueError("z_constraint_enforced must be True")
+    z_fk_frame = string_value(source["z_fk_frame"])
+    if z_fk_frame != "xMateCR7_link6":
+        raise ValueError("z_fk_frame must be xMateCR7_link6")
+    return target_z, gate, z_fk_frame
 
 
 def string_value(value: Any) -> str:
@@ -262,6 +404,16 @@ def validate_verdict(output_dir: Path, metrics: Mapping[str, Any]) -> None:
     safety_flags = (
         int(metrics.get("full_path_safety_pass", 0)) == 1,
         float(metrics.get("maximum_actual_internal_joint_step_rad", 1.0)) <= 0.20,
+        bool(metrics.get("orientation_constraint_enforced", False)),
+        str(metrics.get("orientation_fk_frame", "")) == "xMateCR7_link6",
+        float(metrics.get("maximum_final_orientation_error_rad", np.inf))
+        <= float(metrics.get("maximum_orientation_error_gate_rad", -np.inf)),
+        int(metrics.get("independent_final_orientation_pass", 0)) == 1,
+        bool(metrics.get("z_constraint_enforced", False)),
+        str(metrics.get("z_fk_frame", "")) == "xMateCR7_link6",
+        float(metrics.get("maximum_final_z_error_m", np.inf))
+        <= float(metrics.get("maximum_z_error_gate_m", -np.inf)),
+        int(metrics.get("independent_final_z_pass", 0)) == 1,
     )
     if verdict == ACCEPTED and not all(safety_flags):
         raise ValueError("Accepted verdict is inconsistent with safety flags")
@@ -458,6 +610,100 @@ def validate_approved_exports(output_dir: Path, metrics: Mapping[str, Any], npz:
                 raise ValueError("approved NPZ timestamps disagree with full NPZ")
             if not np.allclose(approved["q"], final_q):
                 raise ValueError("approved NPZ q disagrees with full NPZ")
+            approved_target = validate_target_orientation(approved)
+            full_target = validate_target_orientation(npz)
+            for approved_value, full_value in zip(
+                approved_target[:4],
+                full_target[:4],
+            ):
+                if not np.allclose(approved_value, full_value):
+                    raise ValueError(
+                        "approved NPZ target orientation disagrees with full NPZ"
+                    )
+            if approved_target[4] != full_target[4]:
+                raise ValueError(
+                    "approved NPZ orientation frame disagrees with full NPZ"
+                )
+            approved_z = validate_z_contract(approved)
+            full_z = validate_z_contract(npz)
+            if not np.allclose(approved_z[:2], full_z[:2]):
+                raise ValueError(
+                    "approved NPZ fixed-Z target/gate disagrees with full NPZ"
+                )
+            if approved_z[2] != full_z[2]:
+                raise ValueError(
+                    "approved NPZ Z frame disagrees with full NPZ"
+                )
+            approved_quaternion = finite_array(
+                "approved final_quaternion",
+                approved["final_quaternion"],
+                (TRAJECTORY_LENGTH, 4),
+            )
+            approved_error = finite_array(
+                "approved final_orientation_error_rad",
+                approved["final_orientation_error_rad"],
+                (TRAJECTORY_LENGTH,),
+            )
+            if not np.allclose(
+                approved_quaternion,
+                np.asarray(npz["final_quaternion"], dtype=np.float64),
+            ):
+                raise ValueError(
+                    "approved NPZ final quaternion disagrees with full NPZ"
+                )
+            if not np.allclose(
+                approved_error,
+                np.asarray(
+                    npz["final_orientation_error_rad"],
+                    dtype=np.float64,
+                ),
+            ):
+                raise ValueError(
+                    "approved NPZ orientation error disagrees with full NPZ"
+                )
+            if not np.isclose(
+                number(
+                    np.asarray(
+                        approved["maximum_final_orientation_error_rad"]
+                    ).item()
+                ),
+                number(
+                    np.asarray(
+                        npz["maximum_final_orientation_error_rad"]
+                    ).item()
+                ),
+                rtol=1.0e-7,
+                atol=1.0e-9,
+            ):
+                raise ValueError(
+                    "approved NPZ maximum orientation error disagrees "
+                    "with full NPZ"
+                )
+            approved_z_error = finite_array(
+                "approved final_z_error_m",
+                approved["final_z_error_m"],
+                (TRAJECTORY_LENGTH,),
+            )
+            if not np.allclose(
+                approved_z_error,
+                np.asarray(npz["final_z_error_m"], dtype=np.float64),
+            ):
+                raise ValueError(
+                    "approved NPZ final Z error disagrees with full NPZ"
+                )
+            for field in (
+                "mean_final_z_error_m",
+                "maximum_final_z_error_m",
+            ):
+                if not np.isclose(
+                    number(np.asarray(approved[field]).item()),
+                    number(np.asarray(npz[field]).item()),
+                    rtol=1.0e-7,
+                    atol=1.0e-9,
+                ):
+                    raise ValueError(
+                        f"approved NPZ {field} disagrees with full NPZ"
+                    )
             for field in ("deployment_path_id", "verdict", "urdf_path", "urdf_sha256"):
                 if string_value(approved[field]) != str(metrics[field]):
                     raise ValueError(f"approved NPZ {field} disagrees with metrics")
@@ -542,9 +788,82 @@ def validate_input_copy(output_dir: Path, metrics: Mapping[str, Any], full: Mapp
                 raise ValueError(f"deployment_input_copy.npz {key} disagrees with full NPZ")
         if string_value(copied["path_name"]) != str(metrics["input_path_name"]):
             raise ValueError("deployment_input_copy.npz path_name disagrees with metrics")
-        for field in ("input_sha256", "deployment_path_id", "urdf_path", "urdf_sha256"):
+        for field in (
+            "input_sha256",
+            "deployment_path_id",
+            "urdf_path",
+            "urdf_sha256",
+            "source_checkpoint_sha256",
+        ):
             if string_value(copied[field]) != str(metrics[field]):
                 raise ValueError(f"deployment_input_copy.npz {field} disagrees with metrics")
+        copied_target = validate_target_orientation(copied)
+        full_target = validate_target_orientation(full)
+        for copied_value, full_value, label in zip(
+            copied_target[:4],
+            full_target[:4],
+            (
+                "target_rpy",
+                "target_quaternion",
+                "target_rotation_matrix",
+                "maximum_orientation_error_gate_rad",
+            ),
+        ):
+            if not np.allclose(copied_value, full_value):
+                raise ValueError(
+                    f"deployment_input_copy.npz {label} disagrees with full NPZ"
+                )
+        if copied_target[4] != full_target[4]:
+            raise ValueError(
+                "deployment_input_copy.npz orientation_fk_frame disagrees "
+                "with full NPZ"
+            )
+        copied_z = validate_z_contract(copied)
+        full_z = validate_z_contract(full)
+        if not np.allclose(copied_z[:2], full_z[:2]):
+            raise ValueError(
+                "deployment_input_copy.npz fixed-Z target/gate disagrees "
+                "with full NPZ"
+            )
+        if copied_z[2] != full_z[2]:
+            raise ValueError(
+                "deployment_input_copy.npz z_fk_frame disagrees with full NPZ"
+            )
+        for key, shape in (
+            ("strong_prior_quaternion", (TRAJECTORY_LENGTH, 4)),
+            (
+                "strong_prior_orientation_error_rad",
+                (TRAJECTORY_LENGTH,),
+            ),
+            ("strong_prior_z_error_m", (TRAJECTORY_LENGTH,)),
+        ):
+            copied_value = finite_array(f"input copy {key}", copied[key], shape)
+            full_value = finite_array(f"full NPZ {key}", full[key], shape)
+            if not np.allclose(copied_value, full_value):
+                raise ValueError(
+                    f"deployment_input_copy.npz {key} disagrees with full NPZ"
+                )
+        summary_mapping = {
+            "mean_orientation_error_rad": (
+                "mean_prior_orientation_error_rad"
+            ),
+            "maximum_orientation_error_rad": (
+                "maximum_prior_orientation_error_rad"
+            ),
+            "mean_prior_z_error_m": "mean_prior_z_error_m",
+            "maximum_prior_z_error_m": "maximum_prior_z_error_m",
+        }
+        for copied_key, full_key in summary_mapping.items():
+            if not np.isclose(
+                number(np.asarray(copied[copied_key]).item()),
+                number(np.asarray(full[full_key]).item()),
+                rtol=1.0e-7,
+                atol=1.0e-9,
+            ):
+                raise ValueError(
+                    f"deployment_input_copy.npz {copied_key} disagrees "
+                    f"with full NPZ {full_key}"
+                )
 
 
 def validate_provenance(metrics: Mapping[str, Any]) -> None:
@@ -553,6 +872,7 @@ def validate_provenance(metrics: Mapping[str, Any]) -> None:
         raise ValueError("deployment_metrics.json lacks provenance dictionary")
     required = (
         "generator_script_sha256",
+        "orientation_helper_script_sha256",
         "frozen_v8_1_script_sha256",
         "frozen_v8_script_sha256",
         "training_dataset_manifest_or_path",
@@ -595,6 +915,10 @@ def validate_provenance(metrics: Mapping[str, Any]) -> None:
             ),
             "generator_script_sha256",
         ),
+        (
+            module_file(orientation_ik, "orientation helper"),
+            "orientation_helper_script_sha256",
+        ),
         (module_file(v81, "frozen v8.1"), "frozen_v8_1_script_sha256"),
         (module_file(v8, "frozen v8"), "frozen_v8_script_sha256"),
     )
@@ -622,6 +946,7 @@ def validate_full_npz_metadata(metrics: Mapping[str, Any], npz: Mapping[str, Any
         "input_path_name",
         "input_file",
         "input_sha256",
+        "source_checkpoint_sha256",
         "urdf_path",
         "urdf_sha256",
         "model_dir",
@@ -637,6 +962,13 @@ def validate_full_npz_metadata(metrics: Mapping[str, Any], npz: Mapping[str, Any
         "execution_horizon",
         "anchoring_horizon",
         "history_aware_jerk_tolerance",
+        "maximum_orientation_error_gate_rad",
+        "orientation_constraint_enforced",
+        "orientation_fk_frame",
+        "target_z",
+        "maximum_z_error_gate_m",
+        "z_constraint_enforced",
+        "z_fk_frame",
         "verdict",
     )
     string_fields = {
@@ -644,12 +976,15 @@ def validate_full_npz_metadata(metrics: Mapping[str, Any], npz: Mapping[str, Any
         "input_path_name",
         "input_file",
         "input_sha256",
+        "source_checkpoint_sha256",
         "urdf_path",
         "urdf_sha256",
         "model_dir",
         "training_dataset_dir",
         "checkpoint_state",
         "checkpoint_state_hash",
+        "orientation_fk_frame",
+        "z_fk_frame",
         "verdict",
     }
     for field in scalar_fields:
@@ -673,6 +1008,12 @@ def validate_independent_safety_fields(
     final_ee: np.ndarray,
     prefix_count: int,
     prefix_failures: Sequence[str],
+    finite_orientation: bool,
+    prior_orientation_pass: bool,
+    final_orientation_pass: bool,
+    finite_z: bool,
+    prior_z_pass: bool,
+    final_z_pass: bool,
 ) -> None:
     hard_count = require_metric(
         recomputed_metrics, "rollout_full_hard_joint_limit_violation_count", integer=True
@@ -691,6 +1032,12 @@ def validate_independent_safety_fields(
         "independent_timestamp_pass": int(np.all(np.diff(timestamps) > 0.0)),
         "independent_finite_joint_pass": int(np.all(np.isfinite(final_q))),
         "independent_finite_fk_pass": int(np.all(np.isfinite(final_ee))),
+        "independent_finite_orientation_pass": int(finite_orientation),
+        "independent_prior_orientation_pass": int(prior_orientation_pass),
+        "independent_final_orientation_pass": int(final_orientation_pass),
+        "independent_finite_z_pass": int(finite_z),
+        "independent_prior_z_pass": int(prior_z_pass),
+        "independent_final_z_pass": int(final_z_pass),
     }
     for field, value in expected.items():
         if int(metrics[field]) != value:
@@ -707,6 +1054,20 @@ def main() -> int:
     args = parse_args()
     require_files(args.output_dir)
     metrics = strict_json(args.output_dir / "deployment_metrics.json")
+    source_checkpoint_sha256 = str(
+        metrics.get("source_checkpoint_sha256", "")
+    )
+    if (
+        len(source_checkpoint_sha256) != 64
+        or any(
+            character not in "0123456789abcdef"
+            for character in source_checkpoint_sha256
+        )
+    ):
+        raise ValueError(
+            "source_checkpoint_sha256 must be a lowercase 64-character "
+            "SHA-256 hexadecimal digest"
+        )
     with np.load(args.output_dir / "deployment_trajectory_full.npz", allow_pickle=False) as data:
         timestamps = finite_array("timestamps", data["timestamps"], (TRAJECTORY_LENGTH,))
         desired = finite_array("desired_path", data["desired_path"], (TRAJECTORY_LENGTH, XYZ_DIM))
@@ -714,6 +1075,44 @@ def main() -> int:
         prior_ee = finite_array("strong_prior_ee", data["strong_prior_ee"], (TRAJECTORY_LENGTH, XYZ_DIM))
         final_q = finite_array("final_q", data["final_q"], (TRAJECTORY_LENGTH, JOINT_DIM))
         final_ee = finite_array("final_ee", data["final_ee"], (TRAJECTORY_LENGTH, XYZ_DIM))
+        (
+            target_rpy,
+            target_quaternion,
+            target_rotation,
+            orientation_gate,
+            orientation_fk_frame,
+        ) = validate_target_orientation(data)
+        target_z, z_gate, z_fk_frame = validate_z_contract(data)
+        prior_quaternion = finite_array(
+            "strong_prior_quaternion",
+            data["strong_prior_quaternion"],
+            (TRAJECTORY_LENGTH, 4),
+        )
+        final_quaternion = finite_array(
+            "final_quaternion",
+            data["final_quaternion"],
+            (TRAJECTORY_LENGTH, 4),
+        )
+        prior_orientation_error = finite_array(
+            "strong_prior_orientation_error_rad",
+            data["strong_prior_orientation_error_rad"],
+            (TRAJECTORY_LENGTH,),
+        )
+        final_orientation_error = finite_array(
+            "final_orientation_error_rad",
+            data["final_orientation_error_rad"],
+            (TRAJECTORY_LENGTH,),
+        )
+        prior_z_error = finite_array(
+            "strong_prior_z_error_m",
+            data["strong_prior_z_error_m"],
+            (TRAJECTORY_LENGTH,),
+        )
+        final_z_error = finite_array(
+            "final_z_error_m",
+            data["final_z_error_m"],
+            (TRAJECTORY_LENGTH,),
+        )
         velocity = finite_array("joint_velocity", data["joint_velocity"], (TRAJECTORY_LENGTH, JOINT_DIM))
         acceleration = finite_array("joint_acceleration", data["joint_acceleration"], (TRAJECTORY_LENGTH, JOINT_DIM))
         jerk = finite_array("joint_jerk", data["joint_jerk"], (TRAJECTORY_LENGTH, JOINT_DIM))
@@ -736,6 +1135,278 @@ def main() -> int:
         if sha256_file(urdf_path) != str(metrics["urdf_sha256"]):
             raise ValueError("Recorded URDF hash does not match local file")
         robot = v7_evaluator.make_robot_context(urdf_path)
+        if robot.ee_link != orientation_fk_frame:
+            raise ValueError(
+                "Recorded orientation frame differs from robot context"
+            )
+        if robot.ee_link != z_fk_frame:
+            raise ValueError(
+                "Recorded fixed-Z frame differs from robot context"
+            )
+        if not np.allclose(
+            desired[:, 2],
+            target_z,
+            rtol=0.0,
+            atol=1.0e-12,
+        ):
+            raise ValueError(
+                "desired_path Z is not constant at recorded target_z"
+            )
+        (
+            full_prior_position,
+            full_prior_rotation,
+            recomputed_prior_quaternion,
+        ) = full_transform_fk(robot, prior_q)
+        (
+            full_final_position,
+            full_final_rotation,
+            recomputed_final_quaternion,
+        ) = full_transform_fk(robot, final_q)
+        if not np.allclose(
+            full_prior_position,
+            prior_ee,
+            rtol=1.0e-5,
+            atol=2.0e-5,
+        ):
+            raise ValueError(
+                "Stored prior position disagrees with full-transform FK"
+            )
+        if not np.allclose(
+            full_final_position,
+            final_ee,
+            rtol=1.0e-5,
+            atol=2.0e-5,
+        ):
+            raise ValueError(
+                "Stored final position disagrees with full-transform FK"
+            )
+        if not np.allclose(
+            recomputed_prior_quaternion,
+            prior_quaternion,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "Stored prior quaternion disagrees with full-transform FK"
+            )
+        if not np.allclose(
+            recomputed_final_quaternion,
+            final_quaternion,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "Stored final quaternion disagrees with full-transform FK"
+            )
+        recomputed_prior_orientation_error = orientation_error_trajectory(
+            target_rotation,
+            full_prior_rotation,
+        )
+        recomputed_final_orientation_error = orientation_error_trajectory(
+            target_rotation,
+            full_final_rotation,
+        )
+        recomputed_prior_z_error = np.abs(
+            full_prior_position[:, 2] - target_z
+        )
+        recomputed_final_z_error = np.abs(
+            full_final_position[:, 2] - target_z
+        )
+        if not np.allclose(
+            recomputed_prior_orientation_error,
+            prior_orientation_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "Stored prior orientation errors disagree with recomputation"
+            )
+        if not np.allclose(
+            recomputed_final_orientation_error,
+            final_orientation_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "Stored final orientation errors disagree with recomputation"
+            )
+        if not np.allclose(
+            recomputed_prior_z_error,
+            prior_z_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "Stored prior Z errors disagree with recomputation"
+            )
+        if not np.allclose(
+            recomputed_final_z_error,
+            final_z_error,
+            rtol=1.0e-7,
+            atol=1.0e-9,
+        ):
+            raise ValueError(
+                "Stored final Z errors disagree with recomputation"
+            )
+        finite_orientation = bool(
+            np.all(np.isfinite(target_rpy))
+            and np.all(np.isfinite(target_quaternion))
+            and np.all(np.isfinite(target_rotation))
+            and np.all(np.isfinite(full_prior_rotation))
+            and np.all(np.isfinite(recomputed_prior_quaternion))
+            and np.all(np.isfinite(recomputed_prior_orientation_error))
+            and np.all(np.isfinite(full_final_rotation))
+            and np.all(np.isfinite(recomputed_final_quaternion))
+            and np.all(np.isfinite(recomputed_final_orientation_error))
+        )
+        recomputed_mean_prior_orientation_error = float(
+            np.mean(recomputed_prior_orientation_error)
+        )
+        recomputed_maximum_prior_orientation_error = float(
+            np.max(recomputed_prior_orientation_error)
+        )
+        recomputed_mean_final_orientation_error = float(
+            np.mean(recomputed_final_orientation_error)
+        )
+        recomputed_maximum_final_orientation_error = float(
+            np.max(recomputed_final_orientation_error)
+        )
+        prior_orientation_pass = bool(
+            finite_orientation
+            and recomputed_maximum_prior_orientation_error
+            <= orientation_gate
+        )
+        final_orientation_pass = bool(
+            finite_orientation
+            and recomputed_maximum_final_orientation_error
+            <= orientation_gate
+        )
+        finite_z = bool(
+            np.isfinite(target_z)
+            and np.all(np.isfinite(recomputed_prior_z_error))
+            and np.all(np.isfinite(recomputed_final_z_error))
+        )
+        recomputed_mean_prior_z_error = float(
+            np.mean(recomputed_prior_z_error)
+        )
+        recomputed_maximum_prior_z_error = float(
+            np.max(recomputed_prior_z_error)
+        )
+        recomputed_mean_final_z_error = float(
+            np.mean(recomputed_final_z_error)
+        )
+        recomputed_maximum_final_z_error = float(
+            np.max(recomputed_final_z_error)
+        )
+        prior_z_pass = bool(
+            finite_z and recomputed_maximum_prior_z_error <= z_gate
+        )
+        final_z_pass = bool(
+            finite_z and recomputed_maximum_final_z_error <= z_gate
+        )
+        orientation_metric_values = {
+            "target_rpy": target_rpy,
+            "target_quaternion": target_quaternion,
+            "target_rotation_matrix": target_rotation,
+            "strong_prior_quaternion": recomputed_prior_quaternion,
+            "final_quaternion": recomputed_final_quaternion,
+            "strong_prior_orientation_error_rad": (
+                recomputed_prior_orientation_error
+            ),
+            "final_orientation_error_rad": (
+                recomputed_final_orientation_error
+            ),
+            "strong_prior_z_error_m": recomputed_prior_z_error,
+            "final_z_error_m": recomputed_final_z_error,
+        }
+        for key, expected in orientation_metric_values.items():
+            if key not in metrics:
+                raise KeyError(
+                    f"deployment_metrics.json lacks orientation field {key}"
+                )
+            actual = np.asarray(metrics[key], dtype=np.float64)
+            if actual.shape != expected.shape or not np.allclose(
+                actual,
+                expected,
+                rtol=1.0e-7,
+                atol=1.0e-9,
+            ):
+                raise ValueError(
+                    f"deployment_metrics.json {key} disagrees with "
+                    "independent recomputation"
+                )
+        orientation_summary_values = {
+            "mean_prior_orientation_error_rad": (
+                recomputed_mean_prior_orientation_error
+            ),
+            "maximum_prior_orientation_error_rad": (
+                recomputed_maximum_prior_orientation_error
+            ),
+            "mean_final_orientation_error_rad": (
+                recomputed_mean_final_orientation_error
+            ),
+            "maximum_final_orientation_error_rad": (
+                recomputed_maximum_final_orientation_error
+            ),
+            "maximum_orientation_error_gate_rad": orientation_gate,
+            "mean_prior_z_error_m": recomputed_mean_prior_z_error,
+            "maximum_prior_z_error_m": (
+                recomputed_maximum_prior_z_error
+            ),
+            "mean_final_z_error_m": recomputed_mean_final_z_error,
+            "maximum_final_z_error_m": (
+                recomputed_maximum_final_z_error
+            ),
+            "maximum_z_error_gate_m": z_gate,
+            "target_z": target_z,
+        }
+        for key, expected in orientation_summary_values.items():
+            if key not in data or not np.isclose(
+                number(np.asarray(data[key]).item()),
+                expected,
+                rtol=1.0e-7,
+                atol=1.0e-9,
+            ):
+                raise ValueError(
+                    f"Full NPZ {key} disagrees with independent recomputation"
+                )
+            if key not in metrics or not np.isclose(
+                number(metrics[key]),
+                expected,
+                rtol=1.0e-7,
+                atol=1.0e-9,
+            ):
+                raise ValueError(
+                    f"deployment_metrics.json {key} disagrees with "
+                    "independent recomputation"
+                )
+        if (
+            not isinstance(
+                metrics.get("orientation_constraint_enforced"),
+                bool,
+            )
+            or not metrics["orientation_constraint_enforced"]
+        ):
+            raise ValueError(
+                "Metrics do not record orientation_constraint_enforced=True"
+            )
+        if str(metrics.get("orientation_fk_frame", "")) != (
+            orientation_fk_frame
+        ):
+            raise ValueError(
+                "Metrics orientation_fk_frame disagrees with full NPZ"
+            )
+        if (
+            not isinstance(metrics.get("z_constraint_enforced"), bool)
+            or not metrics["z_constraint_enforced"]
+        ):
+            raise ValueError(
+                "Metrics do not record z_constraint_enforced=True"
+            )
+        if str(metrics.get("z_fk_frame", "")) != z_fk_frame:
+            raise ValueError(
+                "Metrics z_fk_frame disagrees with full NPZ"
+            )
         recomputed_prior_ee = v8.compute_fk_positions(robot, prior_q)
         if not np.allclose(recomputed_prior_ee, prior_ee, rtol=1.0e-5, atol=2.0e-5):
             raise ValueError("Stored prior FK does not match recomputation")
@@ -780,6 +1451,12 @@ def main() -> int:
             final_ee,
             prefix_count,
             prefix_failures,
+            finite_orientation,
+            prior_orientation_pass,
+            final_orientation_pass,
+            finite_z,
+            prior_z_pass,
+            final_z_pass,
         )
         validate_frozen_config(metrics, data)
         validate_full_npz_metadata(metrics, data)
@@ -813,6 +1490,24 @@ def main() -> int:
         and int(metrics["independent_finite_joint_pass"]) == 1
         and int(metrics["independent_finite_fk_pass"]) == 1
         and int(metrics["independent_timestamp_pass"]) == 1
+        and bool(metrics["orientation_constraint_enforced"])
+        and str(metrics["orientation_fk_frame"]) == "xMateCR7_link6"
+        and int(metrics["independent_finite_orientation_pass"]) == 1
+        and int(metrics["independent_prior_orientation_pass"]) == 1
+        and int(metrics["independent_final_orientation_pass"]) == 1
+        and float(metrics["maximum_prior_orientation_error_rad"])
+        <= float(metrics["maximum_orientation_error_gate_rad"])
+        and float(metrics["maximum_final_orientation_error_rad"])
+        <= float(metrics["maximum_orientation_error_gate_rad"])
+        and bool(metrics["z_constraint_enforced"])
+        and str(metrics["z_fk_frame"]) == "xMateCR7_link6"
+        and int(metrics["independent_finite_z_pass"]) == 1
+        and int(metrics["independent_prior_z_pass"]) == 1
+        and int(metrics["independent_final_z_pass"]) == 1
+        and float(metrics["maximum_prior_z_error_m"])
+        <= float(metrics["maximum_z_error_gate_m"])
+        and float(metrics["maximum_final_z_error_m"])
+        <= float(metrics["maximum_z_error_gate_m"])
     )
     metrics_accepted = bool(metrics["accepted"])
     verdict_accepted = str(metrics["verdict"]) == ACCEPTED

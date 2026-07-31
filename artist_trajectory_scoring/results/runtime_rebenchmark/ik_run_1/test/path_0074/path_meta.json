@@ -1,0 +1,17 @@
+{
+  "parameters": {
+    "center": [
+      0.16556215670808283,
+      -0.007906889118893784
+    ],
+    "direction": 1,
+    "rotation": 4.76630698017255,
+    "size": 0.17455893373960232,
+    "start_edge_offset": 1.7235950644501932,
+    "z": 1.1773985624313354
+  },
+  "path_id": "path_0074",
+  "path_type": "square",
+  "split": "test",
+  "timesteps": 100
+}

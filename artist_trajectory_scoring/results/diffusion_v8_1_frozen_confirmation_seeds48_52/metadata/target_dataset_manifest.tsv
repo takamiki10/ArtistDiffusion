@@ -1,0 +1,16 @@
+.adaptive_generation_state_01_primary_jacobian.pkl	2701082838
+.adaptive_generation_state_02_primary_sequential_ik.pkl	3297210053
+.adaptive_generation_state_03_fallback.pkl	3750316694
+adaptive_generation_state.json	104004
+adaptive_stage_summary.csv	527
+candidate_method_summary.csv	1272
+candidate_method_window_contribution.csv	1012
+candidate_results.csv	383982629
+diversity_summary.csv	18406538
+per_path_summary.csv	6089
+per_window_summary.csv	633213
+rejection_reason_summary.csv	746
+scale_summary.csv	1170
+selected_targets.npz	26799426
+selected_target_summary.csv	22953076
+target_generation_summary.json	24165

@@ -1,0 +1,129 @@
+Sequential IK seed generation
+  path_csv:      results/runtime_rebenchmark/_ik_staging/test/path_0100/desired_path.csv
+  urdf_path:     robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/gazebo_xMateCR7.urdf
+  ee_link:       xMateCR7_link6
+  joints:        joint1,joint2,joint3,joint4,joint5,joint6
+  smooth_weight: 0.01
+  maxiter:       300
+  first maxiter: 1000
+  ftol:          1e-10
+  num_restarts:  50
+  retry thresh:  0.02
+  random_seed:   0
+  bounds:
+    joint1: [-3.141600, 3.141600]
+    joint2: [-3.141600, 3.141600]
+    joint3: [-4.974200, 4.974200]
+    joint4: [-3.141600, 3.141600]
+    joint5: [-3.141600, 3.141600]
+    joint6: [-6.108200, 6.108200]
+step 0000 | target=(-0.206900,0.138028,1.178357) | best_error=0.000000 m | success=True | restarts_used=51 | iters=15 | ok
+step 0001 | target=(-0.211868,0.130573,1.178357) | best_error=0.001363 m | success=True | restarts_used=1 | iters=6 | ok
+step 0002 | target=(-0.205824,0.120227,1.178357) | best_error=0.001273 m | success=True | restarts_used=1 | iters=5 | ok
+step 0003 | target=(-0.199781,0.109880,1.178357) | best_error=0.001882 m | success=True | restarts_used=1 | iters=5 | ok
+step 0004 | target=(-0.193737,0.099534,1.178357) | best_error=0.002072 m | success=True | restarts_used=1 | iters=4 | ok
+step 0005 | target=(-0.187694,0.089188,1.178357) | best_error=0.002094 m | success=True | restarts_used=1 | iters=5 | ok
+step 0006 | target=(-0.181650,0.078842,1.178357) | best_error=0.002066 m | success=True | restarts_used=1 | iters=4 | ok
+step 0007 | target=(-0.175606,0.068496,1.178357) | best_error=0.002026 m | success=True | restarts_used=1 | iters=4 | ok
+step 0008 | target=(-0.169563,0.058149,1.178357) | best_error=0.001993 m | success=True | restarts_used=1 | iters=4 | ok
+step 0009 | target=(-0.163519,0.047803,1.178357) | best_error=0.001971 m | success=True | restarts_used=1 | iters=4 | ok
+step 0010 | target=(-0.157476,0.037457,1.178357) | best_error=0.001955 m | success=True | restarts_used=1 | iters=4 | ok
+step 0011 | target=(-0.151432,0.027111,1.178357) | best_error=0.001948 m | success=True | restarts_used=1 | iters=4 | ok
+step 0012 | target=(-0.145389,0.016765,1.178357) | best_error=0.001937 m | success=True | restarts_used=1 | iters=4 | ok
+step 0013 | target=(-0.139345,0.006419,1.178357) | best_error=0.001913 m | success=True | restarts_used=1 | iters=4 | ok
+step 0014 | target=(-0.133302,-0.003928,1.178357) | best_error=0.001872 m | success=True | restarts_used=1 | iters=4 | ok
+step 0015 | target=(-0.127258,-0.014274,1.178357) | best_error=0.001810 m | success=True | restarts_used=1 | iters=4 | ok
+step 0016 | target=(-0.121215,-0.024620,1.178357) | best_error=0.001728 m | success=True | restarts_used=1 | iters=4 | ok
+step 0017 | target=(-0.115171,-0.034966,1.178357) | best_error=0.001629 m | success=True | restarts_used=1 | iters=4 | ok
+step 0018 | target=(-0.109128,-0.045312,1.178357) | best_error=0.001518 m | success=True | restarts_used=1 | iters=4 | ok
+step 0019 | target=(-0.103084,-0.055659,1.178357) | best_error=0.001398 m | success=True | restarts_used=1 | iters=4 | ok
+step 0020 | target=(-0.097041,-0.066005,1.178357) | best_error=0.001276 m | success=True | restarts_used=1 | iters=4 | ok
+step 0021 | target=(-0.090997,-0.076351,1.178357) | best_error=0.001156 m | success=True | restarts_used=1 | iters=4 | ok
+step 0022 | target=(-0.084954,-0.086697,1.178357) | best_error=0.001039 m | success=True | restarts_used=1 | iters=4 | ok
+step 0023 | target=(-0.078910,-0.097043,1.178357) | best_error=0.000930 m | success=True | restarts_used=1 | iters=4 | ok
+step 0024 | target=(-0.072867,-0.107389,1.178357) | best_error=0.000832 m | success=True | restarts_used=1 | iters=4 | ok
+step 0025 | target=(-0.066823,-0.117736,1.178357) | best_error=0.000749 m | success=True | restarts_used=1 | iters=4 | ok
+step 0026 | target=(-0.059368,-0.122703,1.178357) | best_error=0.001308 m | success=True | restarts_used=1 | iters=5 | ok
+step 0027 | target=(-0.049021,-0.116660,1.178357) | best_error=0.002755 m | success=True | restarts_used=1 | iters=9 | ok
+step 0028 | target=(-0.038675,-0.110616,1.178357) | best_error=0.003024 m | success=True | restarts_used=1 | iters=8 | ok
+step 0029 | target=(-0.028329,-0.104573,1.178357) | best_error=0.003022 m | success=True | restarts_used=1 | iters=8 | ok
+step 0030 | target=(-0.017983,-0.098529,1.178357) | best_error=0.002958 m | success=True | restarts_used=1 | iters=7 | ok
+step 0031 | target=(-0.007637,-0.092485,1.178357) | best_error=0.002886 m | success=True | restarts_used=1 | iters=9 | ok
+step 0032 | target=(0.002710,-0.086442,1.178357) | best_error=0.002819 m | success=True | restarts_used=1 | iters=6 | ok
+step 0033 | target=(0.013056,-0.080398,1.178357) | best_error=0.002773 m | success=True | restarts_used=1 | iters=6 | ok
+step 0034 | target=(0.023402,-0.074355,1.178357) | best_error=0.002734 m | success=True | restarts_used=1 | iters=8 | ok
+step 0035 | target=(0.033748,-0.068311,1.178357) | best_error=0.002707 m | success=True | restarts_used=1 | iters=5 | ok
+step 0036 | target=(0.044094,-0.062268,1.178357) | best_error=0.002693 m | success=True | restarts_used=1 | iters=8 | ok
+step 0037 | target=(0.054441,-0.056224,1.178357) | best_error=0.002693 m | success=True | restarts_used=1 | iters=7 | ok
+step 0038 | target=(0.064787,-0.050181,1.178357) | best_error=0.002707 m | success=True | restarts_used=1 | iters=7 | ok
+step 0039 | target=(0.075133,-0.044137,1.178357) | best_error=0.002723 m | success=True | restarts_used=1 | iters=6 | ok
+step 0040 | target=(0.085479,-0.038094,1.178357) | best_error=0.002772 m | success=True | restarts_used=1 | iters=8 | ok
+step 0041 | target=(0.095825,-0.032050,1.178357) | best_error=0.002811 m | success=True | restarts_used=1 | iters=7 | ok
+step 0042 | target=(0.106171,-0.026007,1.178357) | best_error=0.002868 m | success=True | restarts_used=1 | iters=9 | ok
+step 0043 | target=(0.116518,-0.019963,1.178357) | best_error=0.002934 m | success=True | restarts_used=1 | iters=9 | ok
+step 0044 | target=(0.126864,-0.013920,1.178357) | best_error=0.003004 m | success=True | restarts_used=1 | iters=7 | ok
+step 0045 | target=(0.137210,-0.007876,1.178357) | best_error=0.003077 m | success=True | restarts_used=1 | iters=6 | ok
+step 0046 | target=(0.147556,-0.001833,1.178357) | best_error=0.003155 m | success=True | restarts_used=1 | iters=6 | ok
+step 0047 | target=(0.157902,0.004211,1.178357) | best_error=0.003231 m | success=True | restarts_used=1 | iters=16 | ok
+step 0048 | target=(0.168248,0.010254,1.178357) | best_error=0.003297 m | success=True | restarts_used=1 | iters=15 | ok
+step 0049 | target=(0.178595,0.016298,1.178357) | best_error=0.003363 m | success=True | restarts_used=1 | iters=14 | ok
+step 0050 | target=(0.188941,0.022341,1.178357) | best_error=0.003401 m | success=True | restarts_used=1 | iters=12 | ok
+step 0051 | target=(0.193908,0.029797,1.178357) | best_error=0.002902 m | success=True | restarts_used=1 | iters=9 | ok
+step 0052 | target=(0.187865,0.040143,1.178357) | best_error=0.001774 m | success=True | restarts_used=1 | iters=5 | ok
+step 0053 | target=(0.181821,0.050489,1.178357) | best_error=0.001603 m | success=True | restarts_used=1 | iters=5 | ok
+step 0054 | target=(0.175778,0.060836,1.178357) | best_error=0.001704 m | success=True | restarts_used=1 | iters=5 | ok
+step 0055 | target=(0.169734,0.071182,1.178357) | best_error=0.001903 m | success=True | restarts_used=1 | iters=5 | ok
+step 0056 | target=(0.163691,0.081528,1.178357) | best_error=0.002161 m | success=True | restarts_used=1 | iters=5 | ok
+step 0057 | target=(0.157647,0.091874,1.178357) | best_error=0.002471 m | success=True | restarts_used=1 | iters=5 | ok
+step 0058 | target=(0.151604,0.102220,1.178357) | best_error=0.002835 m | success=True | restarts_used=1 | iters=5 | ok
+step 0059 | target=(0.145560,0.112566,1.178357) | best_error=0.003260 m | success=True | restarts_used=1 | iters=5 | ok
+step 0060 | target=(0.139517,0.122913,1.178357) | best_error=0.003754 m | success=True | restarts_used=1 | iters=5 | ok
+step 0061 | target=(0.133473,0.133259,1.178357) | best_error=0.004331 m | success=True | restarts_used=1 | iters=5 | ok
+step 0062 | target=(0.127430,0.143605,1.178357) | best_error=0.004998 m | success=True | restarts_used=1 | iters=6 | ok
+step 0063 | target=(0.121386,0.153951,1.178357) | best_error=0.005755 m | success=True | restarts_used=1 | iters=6 | ok
+step 0064 | target=(0.115343,0.164297,1.178357) | best_error=0.006589 m | success=True | restarts_used=1 | iters=7 | ok
+step 0065 | target=(0.109299,0.174644,1.178357) | best_error=0.007431 m | success=True | restarts_used=1 | iters=7 | ok
+step 0066 | target=(0.103256,0.184990,1.178357) | best_error=0.008170 m | success=True | restarts_used=1 | iters=7 | ok
+step 0067 | target=(0.097212,0.195336,1.178357) | best_error=0.010181 m | success=True | restarts_used=1 | iters=14 | ok
+step 0068 | target=(0.091168,0.205682,1.178357) | best_error=0.017046 m | success=True | restarts_used=1 | iters=11 | ok
+step 0069 | target=(0.085125,0.216028,1.178357) | best_error=0.024652 m | success=True | restarts_used=51 | iters=26 | ok
+step 0070 | target=(0.079081,0.226374,1.178357) | best_error=0.033293 m | success=True | restarts_used=51 | iters=30 | ok
+step 0071 | target=(0.073038,0.236721,1.178357) | best_error=0.042756 m | success=True | restarts_used=51 | iters=28 | ok
+step 0072 | target=(0.066994,0.247067,1.178357) | best_error=0.052671 m | success=True | restarts_used=51 | iters=32 | ok
+step 0073 | target=(0.060951,0.257413,1.178357) | best_error=0.062779 m | success=True | restarts_used=51 | iters=5 | ok
+step 0074 | target=(0.054907,0.267759,1.178357) | best_error=0.072632 m | success=True | restarts_used=51 | iters=22 | ok
+step 0075 | target=(0.048864,0.278105,1.178357) | best_error=0.031720 m | success=True | restarts_used=51 | iters=27 | ok
+step 0076 | target=(0.041408,0.283073,1.178357) | best_error=0.011992 m | success=True | restarts_used=1 | iters=11 | ok
+step 0077 | target=(0.031062,0.277029,1.178357) | best_error=0.003765 m | success=True | restarts_used=1 | iters=7 | ok
+step 0078 | target=(0.020716,0.270986,1.178357) | best_error=0.002306 m | success=True | restarts_used=1 | iters=8 | ok
+step 0079 | target=(0.010370,0.264942,1.178357) | best_error=0.003430 m | success=True | restarts_used=1 | iters=7 | ok
+step 0080 | target=(0.000023,0.258899,1.178357) | best_error=0.004283 m | success=True | restarts_used=1 | iters=9 | ok
+step 0081 | target=(-0.010323,0.252855,1.178357) | best_error=0.004817 m | success=True | restarts_used=1 | iters=11 | ok
+step 0082 | target=(-0.020669,0.246812,1.178357) | best_error=0.005184 m | success=True | restarts_used=1 | iters=12 | ok
+step 0083 | target=(-0.031015,0.240768,1.178357) | best_error=0.005440 m | success=True | restarts_used=1 | iters=11 | ok
+step 0084 | target=(-0.041361,0.234725,1.178357) | best_error=0.005649 m | success=True | restarts_used=1 | iters=12 | ok
+step 0085 | target=(-0.051707,0.228681,1.178357) | best_error=0.005800 m | success=True | restarts_used=1 | iters=12 | ok
+step 0086 | target=(-0.062054,0.222638,1.178357) | best_error=0.005889 m | success=True | restarts_used=1 | iters=6 | ok
+step 0087 | target=(-0.072400,0.216594,1.178357) | best_error=0.005912 m | success=True | restarts_used=1 | iters=6 | ok
+step 0088 | target=(-0.082746,0.210551,1.178357) | best_error=0.005853 m | success=True | restarts_used=1 | iters=6 | ok
+step 0089 | target=(-0.093092,0.204507,1.178357) | best_error=0.005698 m | success=True | restarts_used=1 | iters=6 | ok
+step 0090 | target=(-0.103438,0.198464,1.178357) | best_error=0.005444 m | success=True | restarts_used=1 | iters=6 | ok
+step 0091 | target=(-0.113785,0.192420,1.178357) | best_error=0.005083 m | success=True | restarts_used=1 | iters=5 | ok
+step 0092 | target=(-0.124131,0.186377,1.178357) | best_error=0.004643 m | success=True | restarts_used=1 | iters=5 | ok
+step 0093 | target=(-0.134477,0.180333,1.178357) | best_error=0.009037 m | success=True | restarts_used=1 | iters=6 | ok
+step 0094 | target=(-0.144823,0.174289,1.178357) | best_error=0.012576 m | success=True | restarts_used=1 | iters=5 | ok
+step 0095 | target=(-0.155169,0.168246,1.178357) | best_error=0.014218 m | success=True | restarts_used=1 | iters=6 | ok
+step 0096 | target=(-0.165515,0.162202,1.178357) | best_error=0.013613 m | success=True | restarts_used=1 | iters=6 | ok
+step 0097 | target=(-0.175862,0.156159,1.178357) | best_error=0.011396 m | success=True | restarts_used=1 | iters=6 | ok
+step 0098 | target=(-0.186208,0.150115,1.178357) | best_error=0.008742 m | success=True | restarts_used=1 | iters=6 | ok
+step 0099 | target=(-0.196554,0.144072,1.178357) | best_error=0.006470 m | success=True | restarts_used=1 | iters=6 | ok
+
+Saved IK seed q trajectory to: results/runtime_rebenchmark/_ik_staging/test/path_0100/expert_q.csv
+Saved IK seed FK end-effector trajectory to: results/runtime_rebenchmark/_ik_staging/test/path_0100/expert_ee.csv
+Saved IK seed metrics to: results/runtime_rebenchmark/_ik_staging/test/path_0100/metrics.json
+Final IK seed metrics:
+  mean_error: 0.00688760 m
+  max_error:  0.07263169 m
+  max_error_time: 0.74747473
+  max_error_index: 74
+  path_error: 1.89485354e-04

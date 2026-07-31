@@ -1,0 +1,15 @@
+{
+  "parameters": {
+    "center": [
+      -0.2720605769137289,
+      0.12046827385565786
+    ],
+    "length": 0.25026343000476814,
+    "rotation": 1.5762960453860924,
+    "z": 1.177619218826294
+  },
+  "path_id": "path_0061",
+  "path_type": "vertical_line",
+  "split": "test",
+  "timesteps": 100
+}

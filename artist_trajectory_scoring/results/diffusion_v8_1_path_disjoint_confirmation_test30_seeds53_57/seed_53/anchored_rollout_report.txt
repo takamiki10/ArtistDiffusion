@@ -1,0 +1,11 @@
+Diffusion v8.1 path-disjoint confirmation on adaptive test prior
+
+Path-disjoint evaluation population loaded from test_prior.npz.
+The physical paths are distinct from the train-side v8 validation population.
+Model weights and normalization remain frozen from the original v8 training artifacts.
+sampling_seed: 53
+source paths: 30
+diagnostic subset: False
+training dataset dir: data/cartesian_expert_dataset_v3/diffusion_v8_multitarget_scaled_training_dataset_100paths
+model dir: models/diffusion_v8_multitarget_scaled_residual_unet_100paths_epsilon_only_seed42
+checkpoint: raw_last_epoch187
