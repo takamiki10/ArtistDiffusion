@@ -1,7 +1,7 @@
 # Large local files
 /transfer
 /Miniconda3-latest-Linux-x86_64.sh
-/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg.zip
+/linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg.zip
 
 # Archives
 *.zip
@@ -49,17 +49,32 @@ tensorboard/
 
 # External / embedded repositories
 diffusion_policy/
-artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/*
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/
-artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/*
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/
-artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/*
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/
-artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/*
-!artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/gazebo_xMateCR7.urdf
+linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/*
+!linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/
+linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/*
+!linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/
+linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/*
+!linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/
+linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/*
+!linux/artist_trajectory_scoring/robot_model/rokae_ros_ws/rokae_ros_pkg/src/rokae_xMateCR7_moveit_config/config/gazebo_xMateCR7.urdf
 
 # OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+
+# Handover packages and Windows runtime / recorded artifacts
+.box_handover/
+/windows/**/runtime/
+/windows/**/sdk/
+/windows/**/downloads/
+/windows/**/build_offline/
+/windows/**/artifacts/
+/windows/**/smartjoint_sessions/
+/windows/**/path_0003_sessions/
+/windows/**/neutral_sessions/
+*.dll
+*.exe
+*.tif
+*.TIF

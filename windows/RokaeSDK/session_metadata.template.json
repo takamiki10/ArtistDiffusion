@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "scope": "TEMPLATE_NOT_A_CAPTURE",
+  "ready_for_connection": false,
+  "trial_id": null,
+  "session_utc_start": null,
+  "operator": null,
+  "lifecycle_approval_evidence": null,
+  "robot": {
+    "model": null,
+    "serial": null,
+    "controller_firmware": null,
+    "current_settings_export_sha256": null,
+    "safety_checksum": null,
+    "normal_and_reduced_limits_verified": false,
+    "active_mode": null,
+    "power_state": null,
+    "other_motion_owners_absent": false,
+    "tool_tcp_load_and_frames": null
+  },
+  "software": {
+    "sdk_archive": "xcoresdk_python-v0.5.0.zip (prospective passive fallback; not loaded)",
+    "sdk_archive_sha256": "0d0d1db19fd3340712606531063f3ea0fc65c01a3226d0fb2878c4452ffb1832",
+    "linked_sdk_binary_sha256": null,
+    "firmware_pairing_verified": false,
+    "executable_sha256": null,
+    "source_manifest_sha256": null,
+    "compiler": null,
+    "host_os_and_kernel": null,
+    "prospective_rt_sdk": "not selected; NRT Python v0.5.0",
+    "sdk_import_status": "BLOCKED_WINDOWS_CODE_INTEGRITY"
+  },
+  "acquisition": {
+    "requested_period_ns": 8000000,
+    "actual_period_verified": false,
+    "fields_requested": [
+      "q_m"
+    ],
+    "target_q_valid_in_mode": null,
+    "separate_status_query_policy": null,
+    "host_clock": null,
+    "host_clock_resolution_ns": null,
+    "host_origin_ns": null,
+    "read_bracket_semantics": null,
+    "controller_timestamp_available": false,
+    "source_sequence_available": false,
+    "joint_units": "rad",
+    "joint_velocity_units": "rad/s",
+    "pose_translation_units": "m",
+    "pose_orientation": "row-major rotation matrix",
+    "pose_frame_and_tcp_identity_verified": false,
+    "joint_mapping_verified": false,
+    "controller_to_jetson_permutation": null,
+    "joint_signs": null,
+    "joint_offsets_rad": null,
+    "queue_capacity_records": null,
+    "profile": "1s/10s stationary smoke then 8ms/30s stationary characterization; later NRT motion duration measured"
+  },
+  "execution": {
+    "enabled": false,
+    "command_sha256": null,
+    "package_manifest_sha256": null,
+    "interpolation_definition_sha256": null,
+    "operator_motion_authorization": null,
+    "controller_application_time_origin": null,
+    "host_origin_uncertainty_ns": null,
+    "sdk_and_controller_filter_configuration": null,
+    "deadline_and_abort_policy": null,
+    "physical_duration_s": null,
+    "benchmark_duration_s": 10.0,
+    "uniform_time_scale": null,
+    "protocol": "NRT controller-planned hardware-transfer ablation",
+    "policy_file": "nrt_v050/prepared/controller_policy.json",
+    "primary_metric": "arc-length-weighted symmetric geometric RMS"
+  },
+  "completion": {
+    "records_acquired": null,
+    "records_written": null,
+    "timeouts": null,
+    "queue_overflows": null,
+    "writer_failures": null,
+    "invalid_fields": null,
+    "duplicate_or_backward_host_times": null,
+    "source_counter_gaps": null,
+    "raw_sha256": null,
+    "events_sha256": null,
+    "csv_sha256": null,
+    "valid_for_analysis": false,
+    "invalid_reasons": [
+      "Unpopulated template; no acquisition performed"
+    ]
+  }
+}

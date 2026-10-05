@@ -5,7 +5,7 @@
     "--gpus",
     "all"
   ],
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/workspace/linux",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
   "customizations": {
     "vscode": {
