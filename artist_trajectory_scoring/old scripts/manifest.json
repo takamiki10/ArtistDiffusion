@@ -1,0 +1,190 @@
+{
+  "date": "2026-10-05",
+  "files": [
+    {
+      "original_path": "audit_adaptive_prior_residual_branches.py",
+      "archived_path": "old scripts/audit_adaptive_prior_residual_branches.py",
+      "sha256": "99124ee430aa861c4fe5418783cfab9b8ec46f4208dd9feb24fb4373cc59218d"
+    },
+    {
+      "original_path": "build_diffusion_v5_residual_window_dataset.py",
+      "archived_path": "old scripts/build_diffusion_v5_residual_window_dataset.py",
+      "sha256": "8b86cfd2375df83063c7c3df7dea702f443ddf113ac93741ab835e7b3e81ebf6"
+    },
+    {
+      "original_path": "build_multistroke_full_pose_execution.py.backup",
+      "archived_path": "old scripts/build_multistroke_full_pose_execution.py.backup",
+      "sha256": "ef094311b3fae5c37a0775625987ded4ccdb8929733c3aa23eca9ea919e3a80d"
+    },
+    {
+      "original_path": "debug_mlp_v3_prediction_format.py",
+      "archived_path": "old scripts/debug_mlp_v3_prediction_format.py",
+      "sha256": "24c242117fdccedfbb7f1865377a5e5e962a004c15132fa5e0e4b5a0fe01d27c"
+    },
+    {
+      "original_path": "debug_prior_prediction_format.py",
+      "archived_path": "old scripts/debug_prior_prediction_format.py",
+      "sha256": "1c785aa01135e2f35ebbbee88428314b6a6123ddca10ece867d51fa5eeb466bd"
+    },
+    {
+      "original_path": "diagnose_action_buffer_candidate_selection.py",
+      "archived_path": "old scripts/diagnose_action_buffer_candidate_selection.py",
+      "sha256": "904d0638d8711cd66f4ed739b4995c644d4b29c1a8c16926bb2a926b9a8df241"
+    },
+    {
+      "original_path": "diagnose_diffusion_reconstruction_v4_unet.py",
+      "archived_path": "old scripts/diagnose_diffusion_reconstruction_v4_unet.py",
+      "sha256": "01399b24c8583c9ecf3eeef2450d31166f95ca658176741ffcdc71654050d5d7"
+    },
+    {
+      "original_path": "diagnose_diffusion_v4_prior_initialized_refinement.py",
+      "archived_path": "old scripts/diagnose_diffusion_v4_prior_initialized_refinement.py",
+      "sha256": "7603475cc529feb893deda4809f2c7239fbcfe3d6c4a203abf981bcc3d4df6e5"
+    },
+    {
+      "original_path": "diagnose_diffusion_v4_pure_sampling_vs_noised_expert.py",
+      "archived_path": "old scripts/diagnose_diffusion_v4_pure_sampling_vs_noised_expert.py",
+      "sha256": "c1539fc825b4b4f38922185bcae88d25d815f9026e24ed92e477b7f43058feda"
+    },
+    {
+      "original_path": "diagnose_diffusion_v4_reverse_rollout.py",
+      "archived_path": "old scripts/diagnose_diffusion_v4_reverse_rollout.py",
+      "sha256": "107436fbffda44e1d25289c144af56ba12f2b57e60a05414400c0ce2552f85c5"
+    },
+    {
+      "original_path": "diagnose_diffusion_v5_sampling_modes.py",
+      "archived_path": "old scripts/diagnose_diffusion_v5_sampling_modes.py",
+      "sha256": "6aed221c7eded03f778d411aa70142d3fe43c7cdd963e6c842f94fb97809e5d4"
+    },
+    {
+      "original_path": "diagnose_residual_predictor_v5c_alpha_sweep.py",
+      "archived_path": "old scripts/diagnose_residual_predictor_v5c_alpha_sweep.py",
+      "sha256": "04c54e0ec896c12d8f815be690f249628d728f6011f679dd8e1a62670f821385"
+    },
+    {
+      "original_path": "diagnose_scaled_tapered_action_buffer_candidates.py",
+      "archived_path": "old scripts/diagnose_scaled_tapered_action_buffer_candidates.py",
+      "sha256": "27fadb7b89b1378756a5df7394bbe0de0bd1eb31c99c53fd3c6bf36785b1f745"
+    },
+    {
+      "original_path": "diagnose_v5c_scaled_residual_diffusion_refinement.py",
+      "archived_path": "old scripts/diagnose_v5c_scaled_residual_diffusion_refinement.py",
+      "sha256": "898b4f8db1b104f77406d0583309bc52a68622cc29686affb523c27154d67e73"
+    },
+    {
+      "original_path": "diagnose_warm_start_action_buffer_rollout.py",
+      "archived_path": "old scripts/diagnose_warm_start_action_buffer_rollout.py",
+      "sha256": "701b202a824e462e389fedeadd4f04ca7f6841b49d0514ea19d0725b78f4614a"
+    },
+    {
+      "original_path": "evaluate_base_tail_final_benchmark.py",
+      "archived_path": "old scripts/evaluate_base_tail_final_benchmark.py",
+      "sha256": "1f596d60c27bc08d3f8be67b98e602a8f8ff602d821538409f829837894d8b4b"
+    },
+    {
+      "original_path": "evaluate_global_anchored_receding_horizon_rollout.py",
+      "archived_path": "old scripts/evaluate_global_anchored_receding_horizon_rollout.py",
+      "sha256": "c46c5fed0330353565f7eb5d5903a722a73fb57f0036806ff4938b9db0b2f756"
+    },
+    {
+      "original_path": "evaluate_prior_refinement_fk_robot_costs.py",
+      "archived_path": "old scripts/evaluate_prior_refinement_fk_robot_costs.py",
+      "sha256": "86f644cb49c91accbaf7f625b12b8727ada01032fa887ea0d6dfe8beac062de9"
+    },
+    {
+      "original_path": "evaluate_scaled_tapered_receding_horizon_rollout.py",
+      "archived_path": "old scripts/evaluate_scaled_tapered_receding_horizon_rollout.py",
+      "sha256": "407df6a0fdf75c272e34f5383b8d457450a9dd28f69fced3ccc2f17d0c762cbe"
+    },
+    {
+      "original_path": "evaluate_v5c_scaled_residual_full_trajectory_fk.py",
+      "archived_path": "old scripts/evaluate_v5c_scaled_residual_full_trajectory_fk.py",
+      "sha256": "7d6863d4ad2cb1d5cf7871297d4278cd9f39dfe373b2fb5f09a6706a78ecb410"
+    },
+    {
+      "original_path": "fit_touch_mlp_visualization_only.py",
+      "archived_path": "old scripts/fit_touch_mlp_visualization_only.py",
+      "sha256": "22dede7b20db807f7aa126f2c9454a643630a764f6a7e29e73706c4615b791cf"
+    },
+    {
+      "original_path": "generate_diffusion_v7_cost_improving_residual_targets_gpu.py",
+      "archived_path": "old scripts/generate_diffusion_v7_cost_improving_residual_targets_gpu.py",
+      "sha256": "b27958957e9217975dd6c44f6e6cf7f4a38bc8e781f42a770915c0c45ea4ba04"
+    },
+    {
+      "original_path": "make_final_result_plots.py",
+      "archived_path": "old scripts/make_final_result_plots.py",
+      "sha256": "e14efd4d8bd7847d91b4f17fcd2b31a354df3c12daae7c44808bfa30e27cd511"
+    },
+    {
+      "original_path": "make_results_comparison_table.py",
+      "archived_path": "old scripts/make_results_comparison_table.py",
+      "sha256": "474861276841e82bdf17a8df6c86ec68956f0a724aabac86ebe067d13320bcd8"
+    },
+    {
+      "original_path": "make_unified_artistdiffusion_results_table.py",
+      "archived_path": "old scripts/make_unified_artistdiffusion_results_table.py",
+      "sha256": "6bdf7ac6e995d4f943e828db700e0a3d24c75ad7bc3eb45b53ca074b7efcfb2f"
+    },
+    {
+      "original_path": "make_v4_diffusion_refinement_results_table.py",
+      "archived_path": "old scripts/make_v4_diffusion_refinement_results_table.py",
+      "sha256": "567f2853a77720658f4ae8e94ae48ce768a6b957f44ce386b7b4b1ef2e2286c4"
+    },
+    {
+      "original_path": "plot_path_comparison.py",
+      "archived_path": "old scripts/plot_path_comparison.py",
+      "sha256": "1d4605f7ff475dccd81b7f24312106f494c84a37e406716cfbc84d98e5aa4da2"
+    },
+    {
+      "original_path": "plot_prior_refinement_fk_paths.py",
+      "archived_path": "old scripts/plot_prior_refinement_fk_paths.py",
+      "sha256": "2111e479ff723df916dbb5844b185bb945754017126cea6505c0df8933556c75"
+    },
+    {
+      "original_path": "plot_tracking_error.py",
+      "archived_path": "old scripts/plot_tracking_error.py",
+      "sha256": "667252178bdace60a4973375f0dd5343a372c518ea80b907c24345a8059bb375"
+    },
+    {
+      "original_path": "plot_unified_artistdiffusion_results.py",
+      "archived_path": "old scripts/plot_unified_artistdiffusion_results.py",
+      "sha256": "060399901f8ea7d089f449143f364b30d880166e4f78113c5ac5bd0168c32ac3"
+    },
+    {
+      "original_path": "sample_conditional_diffusion_trajectory_v4_unet.py",
+      "archived_path": "old scripts/sample_conditional_diffusion_trajectory_v4_unet.py",
+      "sha256": "238efaa6ebbcaedc8a825d071b4bc6a409efe91d39bd5e02225dec4e9228ece3"
+    },
+    {
+      "original_path": "sample_conditional_diffusion_trajectory_v5_residual_unet.py",
+      "archived_path": "old scripts/sample_conditional_diffusion_trajectory_v5_residual_unet.py",
+      "sha256": "304bd8e77c5f1d8fdc354ef3f77aae9c325c3d975686135bee13ecf56844a836"
+    },
+    {
+      "original_path": "test_load_urdf.py",
+      "archived_path": "old scripts/test_load_urdf.py",
+      "sha256": "1e7a42cc2d7584bc45e2d5e5134b415eca0a01179969f036ba3926f5664bb0bf"
+    },
+    {
+      "original_path": "train_conditional_diffusion_trajectory_v4_unet.py",
+      "archived_path": "old scripts/train_conditional_diffusion_trajectory_v4_unet.py",
+      "sha256": "4f4ec649f72c303198ff28df734b368be775ba3433d2e8f79e7c04714cbe3699"
+    },
+    {
+      "original_path": "train_conditional_diffusion_trajectory_v7.py",
+      "archived_path": "old scripts/train_conditional_diffusion_trajectory_v7.py",
+      "sha256": "27db92d1d4f63ce65359ac78033b507d24f670929ce9432dcedf4e396a9d706d"
+    },
+    {
+      "original_path": "train_residual_window_predictor_v5c.py",
+      "archived_path": "old scripts/train_residual_window_predictor_v5c.py",
+      "sha256": "7ae0cd67408ec8643240787479c85c9a118bd32af3ccd04ee2bb2a70e345b42c"
+    },
+    {
+      "original_path": "trajectory_costs.py",
+      "archived_path": "old scripts/trajectory_costs.py",
+      "sha256": "09f1eb0041768ab4720890f999be71ad4b4cc3ee433ed924c4c570670cb74a29"
+    }
+  ]
+}

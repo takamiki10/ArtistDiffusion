@@ -698,15 +698,16 @@ class TrackingAndAggregationTests(unittest.TestCase):
         value, source = benchmark.authoritative_max_cartesian_threshold()
         self.assertEqual(value, 0.03)
         self.assertEqual(
-            source, "rerank_diffusion_candidates.ACCEPTANCE_MAX_ERROR"
+            source, "legacy_reranked_diffusion_candidate_max_error_gate"
         )
 
     def test_24ad_missing_authoritative_maximum_threshold_fails(self) -> None:
         with mock.patch.object(
-            benchmark.importlib, "import_module", side_effect=ImportError("missing")
+            benchmark, "LEGACY_RERANKED_DIFFUSION_ACCEPTANCE_MAX_ERROR_M", 0.0
         ):
             with self.assertRaisesRegex(
-                benchmark.BenchmarkError, "maximum Cartesian-error gate"
+                benchmark.BenchmarkError,
+                "Authoritative maximum Cartesian-error gate is invalid",
             ):
                 benchmark.authoritative_max_cartesian_threshold()
 
@@ -1023,7 +1024,7 @@ class SafetyAndEndToEndTests(unittest.TestCase):
                 metadata["mean_cartesian_threshold_source"],
             )
             self.assertIn(
-                "ACCEPTANCE_MAX_ERROR",
+                "legacy_reranked_diffusion_candidate_max_error_gate",
                 metadata["max_cartesian_threshold_source"],
             )
             module_file = benchmark.__file__

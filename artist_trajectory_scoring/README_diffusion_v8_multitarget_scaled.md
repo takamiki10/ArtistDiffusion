@@ -248,7 +248,7 @@ The builder writes:
 
 Compatibility keys such as `condition_norm`, `residual_q_norm`, `path_names`,
 `window_start_indices`, and `sample_weight` are retained for a future v8
-training script. `train_conditional_diffusion_trajectory_v7.py` is not modified.
+training script. `old scripts/train_conditional_diffusion_trajectory_v7.py` is the archived v7 trainer.
 
 ## Sample Weights
 

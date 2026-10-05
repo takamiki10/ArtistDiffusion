@@ -43,8 +43,9 @@ DEFAULT_MEAN_CARTESIAN_THRESHOLD_SOURCE = (
     "MAXIMUM_ALLOWED_MEAN_ERROR_GATE_M"
 )
 DEFAULT_MAX_CARTESIAN_THRESHOLD_SOURCE = (
-    "rerank_diffusion_candidates.ACCEPTANCE_MAX_ERROR"
+    "legacy_reranked_diffusion_candidate_max_error_gate"
 )
+LEGACY_RERANKED_DIFFUSION_ACCEPTANCE_MAX_ERROR_M = 0.030
 DEFAULT_ORIENTATION_THRESHOLD_RAD = 0.05
 DEFAULT_ORIENTATION_THRESHOLD_SOURCE = (
     "validate_diffusion_v8_1_deployment_output."
@@ -299,15 +300,8 @@ def authoritative_mean_cartesian_threshold() -> tuple[float, str]:
 
 
 def authoritative_max_cartesian_threshold() -> tuple[float, str]:
-    """Load the repository's accepted maximum Cartesian-error gate."""
-    try:
-        module = importlib.import_module("rerank_diffusion_candidates")
-        value = float(module.ACCEPTANCE_MAX_ERROR)
-    except (AttributeError, ImportError, TypeError, ValueError) as exc:
-        raise BenchmarkError(
-            "No defensible authoritative maximum Cartesian-error gate was found; "
-            "supply --max_cartesian_error_threshold_m"
-        ) from exc
+    """Return the retained presentation maximum Cartesian-error gate."""
+    value = float(LEGACY_RERANKED_DIFFUSION_ACCEPTANCE_MAX_ERROR_M)
     if not math.isfinite(value) or value <= 0.0:
         raise BenchmarkError(
             "Authoritative maximum Cartesian-error gate is invalid; supply "
