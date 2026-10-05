@@ -9,6 +9,9 @@ auxiliary losses without changing the U-Net capacity.
 
 from __future__ import annotations
 
+from dependencies import PROJECT_ROOT  # Initialize shared module search paths.
+
+
 import argparse
 import contextlib
 import copy

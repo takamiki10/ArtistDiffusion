@@ -9,6 +9,9 @@ evaluation flag is enabled.
 
 from __future__ import annotations
 
+from dependencies import PROJECT_ROOT  # Initialize shared module search paths.
+
+
 import argparse
 import csv
 import hashlib
@@ -3571,11 +3574,11 @@ def main() -> int:
             else "q_start + model_output_normalized * checkpoint_y_std + checkpoint_y_mean"
         ),
         "repository_scripts_reused": [
-            "predict_path_conditioned_mlp.py",
-            "train_path_conditioned_mlp.py",
-            "generate_ik_seed_path.py",
-            "refine_mlp_predictions_with_ik.py",
-            "adaptive_refine_mlp_predictions_with_ik.py",
+            "dependencies/predict_path_conditioned_mlp.py",
+            "dependencies/train_path_conditioned_mlp.py",
+            "dependencies/generate_ik_seed_path.py",
+            "dependencies/refine_mlp_predictions_with_ik.py",
+            "dependencies/adaptive_refine_mlp_predictions_with_ik.py",
         ],
         "ik_parameters": {
             "stage1_smooth_weight": ADAPTIVE_STAGE1_SMOOTH_WEIGHT,

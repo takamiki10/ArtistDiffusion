@@ -7,7 +7,7 @@ They are retained for historical reproduction and reference. Start with the
 All 37 moved files retain their original bytes. [manifest.json](manifest.json)
 records each original path, archive path, and SHA-256 checksum. No model,
 dataset, or saved result was moved. Older-named files still imported by the
-current pipeline remain in the parent directory.
+current pipeline now live under `../dependencies/` or `../evaluation/`.
 
 ## Using archived code
 
@@ -21,7 +21,7 @@ For simple archived commands, run from the parent directory and expose its
 shared helpers on `PYTHONPATH`, for example:
 
 ```bash
-PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}" python "old scripts/plot_path_comparison.py" --help
+PYTHONPATH="$PWD:$PWD/dependencies:$PWD/evaluation:$PWD/benchmark${PYTHONPATH:+:$PYTHONPATH}" python "old scripts/plot_path_comparison.py" --help
 ```
 
 For exact historical relative-path behavior, work in a separate checkout or

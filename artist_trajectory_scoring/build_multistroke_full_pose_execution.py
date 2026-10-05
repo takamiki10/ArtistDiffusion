@@ -4,6 +4,9 @@
 
 from __future__ import annotations
 
+from dependencies import PROJECT_ROOT  # Initialize shared module search paths.
+
+
 import argparse
 import csv
 import hashlib

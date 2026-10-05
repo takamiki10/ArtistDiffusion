@@ -12,6 +12,9 @@ It is normalized to [0, 1] for the canonical MLP and mapped independently to
 
 from __future__ import annotations
 
+from dependencies import PROJECT_ROOT  # Initialize shared module search paths.
+
+
 import argparse
 import hashlib
 import json
